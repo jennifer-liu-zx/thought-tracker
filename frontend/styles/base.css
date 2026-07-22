@@ -1,0 +1,280 @@
+/* ---- Edit these to try a different palette/fonts/shape ---- */
+:root {
+  --font-sans: -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: Georgia, "Times New Roman", serif;
+  --font-size-base: 16px;        /* scales the whole UI (all rem units) at once */
+  --font-size-heading: 1.5rem;   /* brand logo + entry title size */
+  --letter-spacing-wide: 0.06em; /* tracking on uppercase nav labels */
+
+  --color-bg: #e9e7e2;          /* page + topnav background */
+  --color-bg-panel: #ffffff;    /* editor pane background */
+  --color-bg-hover: #ddd9cf;    /* list item hover/selected background */
+  --color-border: #ccc7bc;      /* topnav bottom border */
+  --color-border-input: #cccccc; /* input/textarea borders */
+
+  --color-text: #1a1a1a;        /* main ink color (headings, body) */
+  --color-text-muted: #555555;  /* inactive nav links */
+  --color-text-faint: #777777;  /* entry dates in the list */
+  --color-text-placeholder: #888888; /* "coming soon" placeholders */
+
+  --color-accent: #1a1a1a;      /* buttons, active tab underline, focus border */
+  --color-accent-text: #ffffff; /* text on top of accent-colored buttons */
+  --color-danger: #b3261e;      /* delete button */
+
+  --radius: 0px;                 /* 0 = flat/sharp corners, try 8-12px for a softer look */
+}
+/* ------------------------------------------------------------ */
+
+html {
+  font-size: var(--font-size-base);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Universal click/hover feedback — works with any --color-accent since it's a
+   relative brightness shift, not a hardcoded color. */
+button,
+select,
+.upload-label {
+  transition: filter 0.12s ease, background-color 0.12s ease, border-color 0.12s ease, transform 0.05s ease;
+}
+
+button:not(:disabled):hover,
+.upload-label:hover {
+  filter: brightness(0.93);
+}
+
+button:not(:disabled):active,
+.upload-label:active {
+  filter: brightness(0.85);
+  transform: scale(0.97);
+}
+
+select:hover,
+select:focus {
+  border-color: var(--color-accent);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.topnav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 2rem;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.brand {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-heading);
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.topnav nav {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.nav-btn {
+  font-family: inherit;
+  font-size: 0.85rem;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  background: none;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  color: var(--color-text-muted);
+}
+
+.nav-btn.active {
+  color: var(--color-text);
+  border-bottom: 2px solid var(--color-accent);
+}
+
+main {
+  padding: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.subnav {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.subnav-btn {
+  font-family: inherit;
+  font-size: 0.8rem;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  background: none;
+  border: none;
+  padding: 0 0 0.6rem;
+  cursor: pointer;
+  color: var(--color-text-muted);
+}
+
+.subnav-btn.active {
+  color: var(--color-text);
+  border-bottom: 2px solid var(--color-accent);
+}
+
+.coming-soon {
+  font-family: var(--font-serif);
+  font-size: 1.75rem;
+  text-align: center;
+  color: var(--color-text-placeholder);
+  margin-top: 4rem;
+}
+
+.journal-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 2rem;
+}
+
+.journal-list-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.new-entry-btn {
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 0.6rem;
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.journal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.journal-list li {
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  border-radius: var(--radius);
+}
+
+.journal-list li:hover,
+.journal-list li.selected {
+  background: var(--color-bg-hover);
+  border-left-color: var(--color-accent);
+}
+
+.journal-list .entry-date {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-text-faint);
+}
+
+.journal-list .entry-title {
+  display: block;
+  font-family: var(--font-serif);
+}
+
+.journal-editor-pane {
+  background: var(--color-bg-panel);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+}
+
+#journal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+#entry-date {
+  width: 160px;
+  font-family: inherit;
+  padding: 0.4rem;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius);
+}
+
+#entry-title {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-heading);
+  border: none;
+  border-bottom: 1px solid var(--color-border-input);
+  padding: 0.4rem 0;
+}
+
+#entry-title:focus,
+#entry-body:focus,
+#entry-date:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+#entry-body {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  border: none;
+  resize: vertical;
+}
+
+.editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.unsaved-indicator {
+  font-size: 0.8rem;
+  color: var(--color-danger);
+}
+
+.editor-actions button {
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+#save-btn {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.danger {
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 0.5rem 1.25rem;
+  background: var(--color-bg-panel);
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger) !important;
+  border-radius: var(--radius);
+  cursor: pointer;
+}

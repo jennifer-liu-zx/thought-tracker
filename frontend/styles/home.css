@@ -1,0 +1,97 @@
+/* Home page: favourites swimlanes, styled like angled shelves.
+   This tilt treatment is deliberately only used here — the per-section
+   browse views use plain grid/list, per a later decision to simplify those. */
+
+.swimlane {
+  margin-bottom: 3rem;
+}
+
+.swimlane-title {
+  font-family: var(--font-serif);
+  font-weight: normal;
+  font-size: 1.3rem;
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.shelf-lane {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-end;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 1.5rem 0.5rem 2rem;
+}
+
+.shelf-lane .empty-msg {
+  white-space: nowrap;
+}
+
+.shelf-item {
+  flex-shrink: 0;
+  width: 130px;
+  cursor: pointer;
+}
+
+.shelf-item .cover {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  background: var(--color-bg-hover);
+  overflow: hidden;
+  border-radius: 2px;
+  box-shadow: -10px 8px 16px rgba(0, 0, 0, 0.25);
+  transform: rotateY(24deg);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.shelf-item .cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.32) 0%, rgba(0, 0, 0, 0) 12%);
+  pointer-events: none;
+}
+
+.shelf-item:hover .cover {
+  transform: rotateY(0deg);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+#home-music-lane .cover {
+  aspect-ratio: 1 / 1;
+}
+
+.shelf-item .cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.shelf-item .cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  color: var(--color-text-muted);
+}
+
+.shelf-item .item-info {
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.shelf-item .item-title {
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+
+.shelf-item .item-subtitle {
+  font-size: 0.78rem;
+  color: var(--color-text-faint);
+}

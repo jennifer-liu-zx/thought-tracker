@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Claude_Browser__read_page",
+      "mcp__Claude_Browser__find",
+      "mcp__Claude_Browser__read_console_messages"
+    ]
+  }
+}

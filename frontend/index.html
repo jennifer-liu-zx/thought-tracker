@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Journal.</title>
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/shelf.css" />
+  <link rel="stylesheet" href="/styles/detail.css" />
+  <link rel="stylesheet" href="/styles/home.css" />
+  <link rel="stylesheet" href="/styles/calendar.css" />
+</head>
+<body>
+  <header class="topnav">
+    <h1 class="brand">My Journal.</h1>
+    <nav>
+      <button class="nav-btn active" data-section="home">Home</button>
+      <button class="nav-btn" data-section="movies">Movies &amp; TV</button>
+      <button class="nav-btn" data-section="books">Books</button>
+      <button class="nav-btn" data-section="music">Music</button>
+      <button class="nav-btn" data-section="journal">Random</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="section-home" class="section">
+      <button type="button" id="today-widget" class="today-widget">
+        <span class="today-widget-day" id="today-widget-day"></span>
+        <span class="today-widget-month" id="today-widget-month"></span>
+      </button>
+
+      <div class="swimlane">
+        <h2 class="swimlane-title">Books</h2>
+        <div id="home-books-lane" class="shelf-lane"></div>
+      </div>
+      <div class="swimlane">
+        <h2 class="swimlane-title">Movies &amp; TV</h2>
+        <div id="home-movies-lane" class="shelf-lane"></div>
+      </div>
+      <div class="swimlane">
+        <h2 class="swimlane-title">Music</h2>
+        <div id="home-music-lane" class="shelf-lane"></div>
+      </div>
+    </section>
+
+    <div id="calendar-modal" class="calendar-modal" hidden>
+      <div class="calendar-modal-content">
+        <div class="calendar-modal-header">
+          <button type="button" id="calendar-prev-month" aria-label="Previous month">&larr;</button>
+          <h2 id="calendar-month-title"></h2>
+          <button type="button" id="calendar-next-month" aria-label="Next month">&rarr;</button>
+          <button type="button" id="calendar-close-btn" class="back-btn">&times; Close</button>
+        </div>
+        <div class="calendar-weekdays">
+          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+        </div>
+        <div id="calendar-grid" class="calendar-grid"></div>
+      </div>
+      <aside id="calendar-day-panel" class="calendar-day-panel" hidden>
+        <button type="button" id="calendar-day-panel-close" class="back-btn">&larr; Back</button>
+        <h3 id="calendar-day-panel-title"></h3>
+        <div id="calendar-day-panel-list"></div>
+      </aside>
+    </div>
+
+    <section id="section-movies" class="section" hidden>
+      <div class="subnav">
+        <button type="button" class="subnav-btn active" data-sub="movies">Movies</button>
+        <button type="button" class="subnav-btn" data-sub="tv">TV Shows</button>
+      </div>
+
+      <div id="sub-movies" class="subsection">
+        <div id="movies-browse">
+          <div class="browse-layout">
+            <div class="browse-main">
+              <div class="browse-actions">
+                <button type="button" id="add-movie-btn" class="new-entry-btn">+ Add Movie</button>
+              </div>
+              <div id="movies-collection"></div>
+            </div>
+            <aside id="movies-favorites" class="favorites-panel"></aside>
+          </div>
+        </div>
+
+        <div id="movies-detail" class="detail-pane" hidden>
+          <button type="button" id="movies-back-btn" class="back-btn">&larr; Back to library</button>
+
+          <div id="movie-search-panel" class="search-panel">
+            <input type="search" id="movie-search-input" placeholder="Search TMDb to autofill (optional)..." />
+            <div id="movie-search-results" class="search-results"></div>
+          </div>
+
+          <form id="movie-form">
+            <input type="hidden" id="movie-id" />
+            <div class="detail-grid">
+              <div class="cover-col">
+                <div class="cover-preview" id="movie-cover-preview">no poster</div>
+                <div id="movie-rating" class="star-rating"></div>
+                <input type="text" id="movie-cover" placeholder="Poster image URL" />
+                <label class="upload-label">Upload poster
+                  <input type="file" id="movie-cover-upload" accept="image/*" hidden />
+                </label>
+              </div>
+              <div class="fields-col">
+                <div class="field">
+                  <label for="movie-title">Title</label>
+                  <input type="text" id="movie-title" placeholder="Title" required />
+                </div>
+                <div class="field">
+                  <label for="movie-english-title">English title</label>
+                  <input type="text" id="movie-english-title" placeholder="English title (optional, helps search)" />
+                </div>
+                <label class="checkbox-field">
+                  <input type="checkbox" id="movie-show-english-title" />
+                  Show English title
+                </label>
+                <div class="field">
+                  <label for="movie-year">Year</label>
+                  <input type="text" id="movie-year" placeholder="Year" />
+                </div>
+              </div>
+            </div>
+
+            <div class="tags-section">
+              <h3>Tags</h3>
+              <div id="movie-tags" class="chip-list"></div>
+              <div class="add-row">
+                <input type="text" id="new-movie-tag-text" placeholder="Add a tag..." />
+                <button type="button" id="add-movie-tag-btn">+ Add tag</button>
+              </div>
+            </div>
+
+            <div class="dates-section">
+              <h3>Watch dates</h3>
+              <div id="movie-watch-dates" class="chip-list"></div>
+              <div class="add-row">
+                <input type="date" id="new-watch-date" />
+                <button type="button" id="add-watch-date-btn">+ Add date</button>
+              </div>
+            </div>
+
+            <div class="thoughts-section">
+              <h3>Thoughts</h3>
+              <div id="movie-thoughts" class="thoughts-list"></div>
+              <div class="add-row">
+                <input type="date" id="new-movie-thought-date" />
+                <textarea id="new-movie-thought-text" class="thought-textarea" placeholder="New thought..." rows="2"></textarea>
+                <button type="button" id="add-movie-thought-btn">+ Add thought</button>
+              </div>
+            </div>
+
+            <h3>Notes / review</h3>
+            <textarea id="movie-notes" placeholder="Overall thoughts..." rows="6"></textarea>
+
+            <div class="editor-actions" style="margin-top: 1rem;">
+              <button type="submit" id="movie-save-btn">Save</button>
+              <button type="button" id="movie-delete-btn" class="danger" hidden>Delete</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="sub-tv" class="subsection" hidden>
+        <div id="tv-browse">
+          <div class="browse-layout">
+            <div class="browse-main">
+              <div class="browse-actions">
+                <button type="button" id="add-show-btn" class="new-entry-btn">+ Add Show</button>
+              </div>
+              <div id="tv-collection"></div>
+            </div>
+            <aside id="tv-favorites" class="favorites-panel"></aside>
+          </div>
+        </div>
+
+        <div id="tv-detail" class="detail-pane" hidden>
+          <button type="button" id="tv-back-btn" class="back-btn">&larr; Back to library</button>
+
+          <div id="show-search-panel" class="search-panel">
+            <input type="search" id="show-search-input" placeholder="Search TMDb to autofill (optional)..." />
+            <div id="show-search-results" class="search-results"></div>
+          </div>
+
+          <form id="show-form">
+            <input type="hidden" id="show-id" />
+            <div class="detail-grid">
+              <div class="cover-col">
+                <div class="cover-preview" id="show-cover-preview">no poster</div>
+                <input type="text" id="show-cover" placeholder="Poster image URL" />
+                <label class="upload-label">Upload poster
+                  <input type="file" id="show-cover-upload" accept="image/*" hidden />
+                </label>
+              </div>
+              <div class="fields-col">
+                <div class="field">
+                  <label for="show-title">Title</label>
+                  <input type="text" id="show-title" placeholder="Title" required />
+                </div>
+                <div class="field">
+                  <label for="show-english-title">English title</label>
+                  <input type="text" id="show-english-title" placeholder="English title (optional, helps search)" />
+                </div>
+                <label class="checkbox-field">
+                  <input type="checkbox" id="show-show-english-title" />
+                  Show English title
+                </label>
+                <div class="field">
+                  <label for="show-year">Year</label>
+                  <input type="text" id="show-year" placeholder="Year" />
+                </div>
+              </div>
+            </div>
+
+            <div class="tags-section">
+              <h3>Tags</h3>
+              <div id="show-tags" class="chip-list"></div>
+              <div class="add-row">
+                <input type="text" id="new-show-tag-text" placeholder="Add a tag..." />
+                <button type="button" id="add-show-tag-btn">+ Add tag</button>
+              </div>
+            </div>
+
+            <div class="thoughts-section">
+              <h3>Overall thoughts</h3>
+              <div id="show-thoughts" class="thoughts-list"></div>
+              <div class="add-row">
+                <input type="date" id="new-show-thought-date" />
+                <textarea id="new-show-thought-text" class="thought-textarea" placeholder="New thought..." rows="2"></textarea>
+                <button type="button" id="add-show-thought-btn">+ Add thought</button>
+              </div>
+            </div>
+
+            <h3>Notes</h3>
+            <textarea id="show-notes" placeholder="General notes about the show..." rows="4"></textarea>
+
+            <div class="editor-actions" style="margin-top: 1rem;">
+              <button type="submit" id="show-save-btn">Save show</button>
+              <button type="button" id="show-delete-btn" class="danger" hidden>Delete show</button>
+            </div>
+          </form>
+
+          <div id="episodes-panel" hidden>
+            <div class="episodes-header">
+              <h3>Episodes</h3>
+              <div class="add-row">
+                <input type="number" id="import-season-number" min="1" value="1" style="width: 70px;" />
+                <button type="button" id="import-season-btn">Import season from TMDb</button>
+              </div>
+            </div>
+            <div id="manual-episode-row" class="add-row">
+              <input type="number" id="manual-ep-season" placeholder="Season" min="1" style="width: 80px;" />
+              <input type="number" id="manual-ep-episode" placeholder="Episode" min="1" style="width: 80px;" />
+              <input type="text" id="manual-ep-name" placeholder="Episode name" />
+              <input type="date" id="manual-ep-airdate" />
+              <button type="button" id="manual-ep-save-btn">+ Add episode</button>
+            </div>
+            <div id="episodes-list" class="episodes-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-books" class="section" hidden>
+      <div id="books-browse">
+        <div class="browse-layout">
+          <div class="browse-main">
+            <div class="browse-actions">
+              <button type="button" id="add-book-btn" class="new-entry-btn">+ Add Book</button>
+            </div>
+            <div id="books-collection"></div>
+          </div>
+          <aside id="books-favorites" class="favorites-panel"></aside>
+        </div>
+      </div>
+
+      <div id="books-detail" class="detail-pane" hidden>
+        <button type="button" id="books-back-btn" class="back-btn">&larr; Back to library</button>
+
+        <div id="book-search-panel" class="search-panel">
+          <input type="search" id="book-search-input" placeholder="Search Open Library to autofill (optional)..." />
+          <div id="book-search-results" class="search-results"></div>
+        </div>
+
+        <form id="book-form">
+          <input type="hidden" id="book-id" />
+          <div class="detail-grid">
+            <div class="cover-col">
+              <div class="cover-preview" id="book-cover-preview">no cover</div>
+              <div id="book-rating" class="star-rating"></div>
+              <input type="text" id="book-cover" placeholder="Cover image URL" />
+              <label class="upload-label">Upload cover
+                <input type="file" id="book-cover-upload" accept="image/*" hidden />
+              </label>
+            </div>
+            <div class="fields-col">
+              <div class="field">
+                <label for="book-title">Title</label>
+                <input type="text" id="book-title" placeholder="Title" required />
+              </div>
+              <div class="field">
+                <label for="book-english-title">English title</label>
+                <input type="text" id="book-english-title" placeholder="English title (optional, helps search)" />
+              </div>
+              <label class="checkbox-field">
+                <input type="checkbox" id="book-show-english-title" />
+                Show English title
+              </label>
+              <div class="field">
+                <label for="book-author">Author</label>
+                <input type="text" id="book-author" placeholder="Author" />
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="book-publisher">Publisher</label>
+                  <input type="text" id="book-publisher" placeholder="Publisher" />
+                </div>
+                <div class="field">
+                  <label for="book-publish-date">Publish year</label>
+                  <input type="text" id="book-publish-date" placeholder="Publish year" />
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="book-isbn">ISBN</label>
+                  <input type="text" id="book-isbn" placeholder="ISBN" />
+                </div>
+                <div class="field">
+                  <label for="book-pages">Pages</label>
+                  <input type="number" id="book-pages" placeholder="Pages" />
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="book-genre">Genre</label>
+                  <input type="text" id="book-genre" placeholder="Genre" />
+                </div>
+                <div class="field">
+                  <label for="book-series">Series</label>
+                  <input type="text" id="book-series" placeholder="Series" />
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="book-format">Format</label>
+                  <select id="book-format" title="Default format, prefilled when you add a new read date">
+                    <option value="physical">Physical</option>
+                    <option value="ebook">Ebook</option>
+                    <option value="audiobook">Audiobook</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="book-status">Status</label>
+                  <select id="book-status">
+                    <option value="want_to_read">Want to read</option>
+                    <option value="reading">Reading</option>
+                    <option value="finished">Finished</option>
+                    <option value="dnf">DNF</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tags-section">
+            <h3>Tags</h3>
+            <div id="book-tags" class="chip-list"></div>
+            <div class="add-row">
+              <input type="text" id="new-tag-text" placeholder="Add a tag..." />
+              <button type="button" id="add-tag-btn">+ Add tag</button>
+            </div>
+          </div>
+
+          <div class="dates-section">
+            <h3>Read dates</h3>
+            <div id="book-read-dates" class="chip-list"></div>
+            <div class="add-row">
+              <input type="date" id="new-read-date" />
+              <select id="new-read-date-format">
+                <option value="physical">Physical</option>
+                <option value="ebook">Ebook</option>
+                <option value="audiobook">Audiobook</option>
+              </select>
+              <button type="button" id="add-read-date-btn">+ Add date</button>
+            </div>
+          </div>
+
+          <div class="thoughts-section">
+            <h3>Thoughts</h3>
+            <div id="book-thoughts" class="thoughts-list"></div>
+            <div class="add-row">
+              <input type="date" id="new-thought-date" />
+              <textarea id="new-thought-text" class="thought-textarea" placeholder="New thought..." rows="2"></textarea>
+              <button type="button" id="add-thought-btn">+ Add thought</button>
+            </div>
+          </div>
+
+          <h3>Notes / review</h3>
+          <textarea id="book-notes" placeholder="Overall thoughts once you've finished..." rows="6"></textarea>
+
+          <div class="editor-actions" style="margin-top: 1rem;">
+            <button type="submit" id="book-save-btn">Save</button>
+            <button type="button" id="book-delete-btn" class="danger" hidden>Delete</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section id="section-music" class="section" hidden>
+      <div id="music-browse">
+        <div class="browse-layout">
+          <div class="browse-main">
+            <div class="browse-actions">
+              <button type="button" id="add-album-btn" class="new-entry-btn">+ Add Album</button>
+            </div>
+            <div id="music-collection"></div>
+          </div>
+          <aside id="music-favorites" class="favorites-panel"></aside>
+        </div>
+      </div>
+
+      <div id="music-detail" class="detail-pane" hidden>
+        <button type="button" id="music-back-btn" class="back-btn">&larr; Back to library</button>
+
+        <form id="album-form">
+          <input type="hidden" id="album-id" />
+          <div class="detail-grid">
+            <div class="cover-col">
+              <div class="cover-preview" id="album-cover-preview">no cover</div>
+              <input type="text" id="album-cover" placeholder="Cover image URL" />
+              <label class="upload-label">Upload cover
+                <input type="file" id="album-cover-upload" accept="image/*" hidden />
+              </label>
+            </div>
+            <div class="fields-col">
+              <div class="field">
+                <label for="album-title">Album title</label>
+                <input type="text" id="album-title" placeholder="Album title" required />
+              </div>
+              <div class="field">
+                <label for="album-english-title">English title</label>
+                <input type="text" id="album-english-title" placeholder="English title (optional, helps search)" />
+              </div>
+              <label class="checkbox-field">
+                <input type="checkbox" id="album-show-english-title" />
+                Show English title
+              </label>
+              <div class="field">
+                <label for="album-artist">Artist</label>
+                <input type="text" id="album-artist" placeholder="Artist" />
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="album-year">Year</label>
+                  <input type="text" id="album-year" placeholder="Year" />
+                </div>
+                <div class="field">
+                  <label for="album-release-type">Release type</label>
+                  <select id="album-release-type">
+                    <option value="album">Album</option>
+                    <option value="ep">EP</option>
+                    <option value="single">Single</option>
+                    <option value="live">Live</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tags-section">
+            <h3>Tags</h3>
+            <div id="album-tags" class="chip-list"></div>
+            <div class="add-row">
+              <input type="text" id="new-album-tag-text" placeholder="Add a tag..." />
+              <button type="button" id="add-album-tag-btn">+ Add tag</button>
+            </div>
+          </div>
+
+          <div class="thoughts-section">
+            <h3>Overall thoughts</h3>
+            <div id="album-thoughts" class="thoughts-list"></div>
+            <div class="add-row">
+              <input type="date" id="new-album-thought-date" />
+              <textarea id="new-album-thought-text" class="thought-textarea" placeholder="New thought..." rows="2"></textarea>
+              <button type="button" id="add-album-thought-btn">+ Add thought</button>
+            </div>
+          </div>
+
+          <h3>Notes</h3>
+          <textarea id="album-notes" placeholder="General notes about the album..." rows="4"></textarea>
+
+          <div class="editor-actions" style="margin-top: 1rem;">
+            <button type="submit" id="album-save-btn">Save album</button>
+            <button type="button" id="album-delete-btn" class="danger" hidden>Delete album</button>
+          </div>
+        </form>
+
+        <div id="tracks-panel" hidden>
+          <div class="episodes-header">
+            <h3>Tracks</h3>
+          </div>
+          <div id="add-track-row" class="add-row">
+            <input type="text" id="new-track-title" placeholder="Track title" />
+            <button type="button" id="save-track-btn">+ Add track</button>
+          </div>
+          <p class="hint-text">Drag the <span aria-hidden="true">⠿</span> handle to reorder.</p>
+          <div id="tracks-list" class="tracks-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-journal" class="section" hidden>
+      <div class="journal-layout">
+        <aside class="journal-list-pane">
+          <button id="new-entry-btn" class="new-entry-btn">+ New Entry</button>
+          <ul id="journal-list" class="journal-list"></ul>
+        </aside>
+        <div class="journal-editor-pane">
+          <form id="journal-form">
+            <input type="hidden" id="entry-id" />
+            <div class="field">
+              <label for="entry-date">Date</label>
+              <input type="date" id="entry-date" required />
+            </div>
+            <div class="field">
+              <label for="entry-title">Title</label>
+              <input type="text" id="entry-title" placeholder="Title" required />
+            </div>
+            <div class="field">
+              <label for="entry-body">Entry</label>
+              <textarea id="entry-body" placeholder="Write..." rows="18"></textarea>
+            </div>
+            <div class="editor-actions">
+              <button type="submit" id="save-btn">Save</button>
+              <button type="button" id="delete-btn" class="danger" hidden>Delete</button>
+              <span id="unsaved-indicator" class="unsaved-indicator" hidden>&#9679; Unsaved changes</span>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/scripts/app.js"></script>
+  <script src="/scripts/shelf.js"></script>
+  <script src="/scripts/journal.js"></script>
+  <script src="/scripts/books.js"></script>
+  <script src="/scripts/movies.js"></script>
+  <script src="/scripts/tv.js"></script>
+  <script src="/scripts/music.js"></script>
+  <script src="/scripts/home.js"></script>
+  <script src="/scripts/calendar.js"></script>
+</body>
+</html>

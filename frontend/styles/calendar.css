@@ -1,0 +1,167 @@
+/* Home page "today" widget + expandable month calendar. Kept plain/functional
+   on purpose — this is a good candidate for later visual-only redesign. */
+
+.today-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  width: 110px;
+  padding: 1rem 0.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius);
+  background: var(--color-bg-panel);
+  cursor: pointer;
+}
+
+.today-widget-day {
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.today-widget-month {
+  font-size: 0.8rem;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+}
+
+.calendar-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.calendar-modal-content {
+  flex: 1;
+  background: var(--color-bg-panel);
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.calendar-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.calendar-modal-header h2 {
+  font-family: var(--font-serif);
+  font-weight: normal;
+  min-width: 220px;
+  text-align: center;
+}
+
+.calendar-modal-header button:not(.back-btn) {
+  font-size: 1.2rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 1px solid var(--color-border-input);
+  background: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.calendar-modal-header .back-btn {
+  margin-left: auto;
+}
+
+.calendar-weekdays,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+}
+
+.calendar-weekdays {
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--color-text-faint);
+  text-align: center;
+}
+
+.calendar-cell {
+  min-height: 90px;
+  padding: 0.4rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.calendar-cell:hover {
+  background: var(--color-bg-hover);
+}
+
+.calendar-cell-empty {
+  border: none;
+  cursor: default;
+}
+
+.calendar-cell-empty:hover {
+  background: none;
+}
+
+.calendar-cell-today {
+  border-color: var(--color-accent);
+  border-width: 2px;
+}
+
+.calendar-cell-day {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  margin-bottom: 0.3rem;
+}
+
+.calendar-cell-summary {
+  font-size: 0.7rem;
+  color: var(--color-text-faint);
+  line-height: 1.4;
+}
+
+.calendar-day-panel {
+  width: 320px;
+  flex-shrink: 0;
+  background: var(--color-bg-panel);
+  border-left: 1px solid var(--color-border);
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.calendar-day-panel h3 {
+  font-family: var(--font-serif);
+  font-weight: normal;
+  margin: 0 0 1rem;
+}
+
+.calendar-day-item {
+  padding: 0.6rem;
+  margin-bottom: 0.5rem;
+  border-radius: var(--radius);
+  background: var(--color-bg-hover);
+  cursor: pointer;
+}
+
+.calendar-day-item-category {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-faint);
+}
+
+.calendar-day-item-title {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  margin: 0.15rem 0;
+}
+
+.calendar-day-item-text {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  white-space: pre-wrap;
+}

@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+
+# Personal diary content — journal entries, thoughts, uploaded covers/lyrics.
+# Deliberately kept local-only; never committed, even to a private repo.
+# media/ itself must stay trackable (not just its contents) — FastAPI's
+# StaticFiles mount requires the directory to exist at startup.
+data/
+media/*
+!media/.gitkeep
+
+.pytest_cache/
+

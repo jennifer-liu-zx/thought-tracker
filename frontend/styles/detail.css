@@ -1,0 +1,505 @@
+/* Shared "browse <-> detail" pattern used by books/movies/music sections */
+
+.browse-actions {
+  margin-bottom: 1.5rem;
+}
+
+.back-btn {
+  font-family: inherit;
+  font-size: 0.85rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 0;
+  margin-bottom: 1.25rem;
+}
+
+.detail-pane {
+  background: var(--color-bg-panel);
+  padding: 1.75rem;
+  border-radius: var(--radius);
+}
+
+.search-panel {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.search-result {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem;
+  cursor: pointer;
+  border-radius: var(--radius);
+}
+
+.search-result:hover {
+  background: var(--color-bg-hover);
+}
+
+.search-result img {
+  width: 30px;
+  height: 45px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--color-bg-hover);
+}
+
+.search-result .result-title {
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+}
+
+.search-result .result-subtitle {
+  font-size: 0.75rem;
+  color: var(--color-text-faint);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.cover-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.favorite-toggle {
+  font-size: 1.1rem;
+  padding: 0.35rem;
+  border: 1px solid var(--color-border-input);
+  background: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--color-text-muted);
+  line-height: 1;
+}
+
+.favorite-toggle.active {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.cover-preview {
+  width: 160px;
+  aspect-ratio: 2 / 3;
+  background: var(--color-bg-hover);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-family: var(--font-serif);
+}
+
+#album-cover-preview {
+  aspect-ratio: 1 / 1;
+}
+
+.cover-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-label {
+  display: inline-flex;
+  align-items: center;
+  font-family: inherit;
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.fields-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.field-row {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.field-row > * {
+  flex: 1;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.field label {
+  font-size: 0.75rem;
+  color: var(--color-text-faint);
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.checkbox-field input[type="checkbox"] {
+  width: auto;
+  cursor: pointer;
+}
+
+.rating-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.rating-label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.detail-pane input[type="text"],
+.detail-pane input[type="number"],
+.detail-pane input[type="date"],
+.detail-pane select,
+.detail-pane textarea {
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius);
+  width: 100%;
+}
+
+.detail-pane input:focus,
+.detail-pane select:focus,
+.detail-pane textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.detail-pane textarea {
+  font-family: var(--font-serif);
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.detail-pane h3 {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-weight: normal;
+  margin: 0 0 0.5rem;
+  color: var(--color-text-muted);
+}
+
+.tags-section,
+.dates-section,
+.thoughts-section {
+  margin-bottom: 1.5rem;
+}
+
+.chip-meta {
+  color: var(--color-text-faint);
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--color-bg-hover);
+  border-radius: var(--radius);
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+.chip button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-faint);
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.add-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.thought-textarea {
+  flex: 1;
+  min-height: 2.4rem;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.add-row input[type="date"] {
+  width: 160px;
+  flex: none;
+}
+
+.add-row button {
+  font-family: inherit;
+  font-size: 0.8rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--color-border-input);
+  background: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.thoughts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.thought-item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.5rem 0.6rem;
+  background: var(--color-bg-hover);
+  border-radius: var(--radius);
+}
+
+.thought-item .thought-date {
+  font-size: 0.75rem;
+  color: var(--color-text-faint);
+  flex-shrink: 0;
+  width: 90px;
+  padding-top: 0.1rem;
+}
+
+.thought-item .thought-text {
+  flex: 1;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+}
+
+.thought-item button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-faint);
+  flex-shrink: 0;
+}
+
+/* ---- Episodes accordion (TV shows) / Tracks accordion (Music) ---- */
+#episodes-panel,
+#tracks-panel {
+  margin-top: 2rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.episodes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.season-group {
+  margin-bottom: 0.6rem;
+}
+
+.season-group > summary {
+  cursor: pointer;
+  padding: 0.6rem 0.75rem;
+  background: var(--color-bg-hover);
+  border-radius: var(--radius);
+  font-family: var(--font-serif);
+  list-style: none;
+}
+
+.season-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.season-group .season-count {
+  color: var(--color-text-faint);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+}
+
+.episodes-in-season {
+  padding: 0.25rem 0 0.25rem 1rem;
+}
+
+.episode-item,
+.track-item {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.episode-item > summary,
+.track-item > summary {
+  cursor: pointer;
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.5rem 0.25rem;
+  list-style: none;
+}
+
+.episode-item > summary::-webkit-details-marker,
+.track-item > summary::-webkit-details-marker {
+  display: none;
+}
+
+.episode-item .ep-num,
+.track-item .ep-num {
+  color: var(--color-text-faint);
+  font-size: 0.8rem;
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.episode-item .ep-name,
+.track-item .ep-name {
+  font-family: var(--font-serif);
+  flex: 1;
+}
+
+.episode-item .ep-air-date,
+.track-item .ep-air-date {
+  color: var(--color-text-faint);
+  font-size: 0.8rem;
+}
+
+.tracks-list {
+  margin-top: 0.5rem;
+}
+
+.hint-text {
+  font-size: 0.8rem;
+  color: var(--color-text-faint);
+  margin: 0.5rem 0 0;
+}
+
+.track-item.drag-over {
+  border-top: 2px solid var(--color-accent);
+}
+
+.drag-handle {
+  cursor: grab;
+  color: var(--color-text-faint);
+  flex-shrink: 0;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.lyrics-box {
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  width: 100%;
+  min-height: 120px;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius);
+  resize: vertical;
+}
+
+.episode-body {
+  padding: 0.5rem 0.25rem 1rem 2.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mini-section h4 {
+  font-family: var(--font-serif);
+  font-weight: normal;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin: 0 0 0.4rem;
+}
+
+.track-title-display {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+}
+
+.mini-section .track-link {
+  width: 100%;
+}
+
+/* Credits — a nested accordion so it stays out of the way until wanted */
+.credits-details summary {
+  cursor: pointer;
+  font-family: var(--font-serif);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  list-style: none;
+}
+
+.credits-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.credits-details summary::before {
+  content: "▸ ";
+}
+
+.credits-details[open] summary::before {
+  content: "▾ ";
+}
+
+.credits-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin: 0.6rem 0;
+}
+
+.save-credits-btn {
+  font-family: inherit;
+  font-size: 0.8rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--color-border-input);
+  background: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
