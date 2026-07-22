@@ -1,9 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from app.config import MOVIES_DIR
 from app.external.tmdb import search_movies
 from app.models import MovieIn, MovieOut
-from app.storage import list_entries, read_entry, slugify, unique_path, write_entry
+from app.storage import list_entries, read_entry, require_exists, slugify, unique_path, write_entry
 
 router = APIRouter(prefix="/api/movies", tags=["movies"])
 
@@ -39,18 +39,14 @@ def create_movie(movie: MovieIn):
 
 @router.get("/{movie_id}", response_model=MovieOut)
 def get_movie(movie_id: str):
-    path = _path_for_id(movie_id)
-    if not path.exists():
-        raise HTTPException(status_code=404, detail="Movie not found")
+    path = require_exists(_path_for_id(movie_id), "Movie not found")
     metadata, content = read_entry(path)
     return _to_out(path, metadata, content)
 
 
 @router.put("/{movie_id}", response_model=MovieOut)
 def update_movie(movie_id: str, movie: MovieIn):
-    path = _path_for_id(movie_id)
-    if not path.exists():
-        raise HTTPException(status_code=404, detail="Movie not found")
+    path = require_exists(_path_for_id(movie_id), "Movie not found")
     metadata = movie.model_dump(exclude={"notes"})
     write_entry(path, metadata, movie.notes)
     return _to_out(path, metadata, movie.notes)
@@ -58,8 +54,6 @@ def update_movie(movie_id: str, movie: MovieIn):
 
 @router.delete("/{movie_id}")
 def delete_movie(movie_id: str):
-    path = _path_for_id(movie_id)
-    if not path.exists():
-        raise HTTPException(status_code=404, detail="Movie not found")
+    path = require_exists(_path_for_id(movie_id), "Movie not found")
     path.unlink()
     return {"ok": True}

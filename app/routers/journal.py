@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from app.config import JOURNAL_DIR
 from app.models import JournalEntryIn, JournalEntryOut
-from app.storage import list_entries, read_entry, slugify, unique_path, write_entry
+from app.storage import list_entries, read_entry, require_exists, slugify, unique_path, write_entry
 
 router = APIRouter(prefix="/api/journal", tags=["journal"])
 
@@ -39,9 +39,7 @@ def create_journal_entry(entry: JournalEntryIn):
 
 @router.get("/{entry_id}", response_model=JournalEntryOut)
 def get_journal_entry(entry_id: str):
-    path = _path_for_id(entry_id)
-    if not path.exists():
-        raise HTTPException(status_code=404, detail="Journal entry not found")
+    path = require_exists(_path_for_id(entry_id), "Journal entry not found")
     metadata, content = read_entry(path)
     return JournalEntryOut(
         id=path.stem, title=metadata.get("title", ""), date=metadata.get("date", ""), body=content
@@ -50,17 +48,13 @@ def get_journal_entry(entry_id: str):
 
 @router.put("/{entry_id}", response_model=JournalEntryOut)
 def update_journal_entry(entry_id: str, entry: JournalEntryIn):
-    path = _path_for_id(entry_id)
-    if not path.exists():
-        raise HTTPException(status_code=404, detail="Journal entry not found")
+    path = require_exists(_path_for_id(entry_id), "Journal entry not found")
     write_entry(path, {"title": entry.title, "date": entry.date}, entry.body)
     return JournalEntryOut(id=path.stem, title=entry.title, date=entry.date, body=entry.body)
 
 
 @router.delete("/{entry_id}")
 def delete_journal_entry(entry_id: str):
-    path = _path_for_id(entry_id)
-    if not path.exists():
-        raise HTTPException(status_code=404, detail="Journal entry not found")
+    path = require_exists(_path_for_id(entry_id), "Journal entry not found")
     path.unlink()
     return {"ok": True}

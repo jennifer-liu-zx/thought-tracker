@@ -2,6 +2,15 @@ import re
 from pathlib import Path
 
 import frontmatter
+from fastapi import HTTPException
+
+
+def require_exists(path: Path, detail: str) -> Path:
+    """Raise a 404 if `path` doesn't exist, otherwise return it unchanged
+    (so call sites can inline it: `path = require_exists(..., "Book not found")`)."""
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=detail)
+    return path
 
 
 def slugify(text: str) -> str:

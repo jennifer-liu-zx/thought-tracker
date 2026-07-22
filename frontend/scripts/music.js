@@ -96,30 +96,12 @@
       : "no cover";
   }
 
-  function renderThoughts() {
-    thoughtsEl.innerHTML = "";
-    thoughts.forEach((t, i) => {
-      const row = document.createElement("div");
-      row.className = "thought-item";
-      row.innerHTML = `<span class="thought-date">${escapeHtml(t.date)}</span><span class="thought-text">${escapeHtml(t.text)}</span><button type="button" aria-label="remove">&times;</button>`;
-      row.querySelector("button").addEventListener("click", () => {
-        if (!confirm("Delete this thought?")) return;
-        thoughts.splice(i, 1);
-        renderThoughts();
-      });
-      thoughtsEl.appendChild(row);
-    });
-  }
-
-  addThoughtBtn.addEventListener("click", () => {
-    const date = newThoughtDateEl.value;
-    const text = newThoughtTextEl.value.trim();
-    if (!date || !text) return;
-    thoughts.push({ date, text });
-    thoughts.sort((a, b) => a.date.localeCompare(b.date));
-    newThoughtDateEl.value = "";
-    newThoughtTextEl.value = "";
-    renderThoughts();
+  const thoughtsEditor = createThoughtsEditor({
+    container: thoughtsEl,
+    getThoughts: () => thoughts,
+    dateInput: newThoughtDateEl,
+    textInput: newThoughtTextEl,
+    addBtn: addThoughtBtn,
   });
 
   function renderTags() {
@@ -180,7 +162,7 @@
     thoughts = [];
     tags = [];
     favorite = false;
-    renderThoughts();
+    thoughtsEditor.render();
     renderTags();
     updateCoverPreview();
     deleteBtn.hidden = true;
@@ -279,7 +261,7 @@
     englishTitleSection.innerHTML = `
       <div class="field">
         <label>English title</label>
-        <input type="text" class="track-english-title" placeholder="English title (optional, helps search)" />
+        <input type="text" class="track-english-title" placeholder="English title (optional)" />
       </div>
       <label class="checkbox-field">
         <input type="checkbox" class="track-show-english-title" />
@@ -384,21 +366,14 @@
       });
     });
 
-    function renderTrackThoughts() {
-      trackThoughtsEl.innerHTML = "";
-      track.thoughts.forEach((t, i) => {
-        const row = document.createElement("div");
-        row.className = "thought-item";
-        row.innerHTML = `<span class="thought-date">${escapeHtml(t.date)}</span><span class="thought-text">${escapeHtml(t.text)}</span><button type="button" aria-label="remove">&times;</button>`;
-        row.querySelector("button").addEventListener("click", () => {
-          if (!confirm("Delete this thought?")) return;
-          track.thoughts.splice(i, 1);
-          renderTrackThoughts();
-          saveTrack();
-        });
-        trackThoughtsEl.appendChild(row);
-      });
-    }
+    const trackThoughtsEditor = createThoughtsEditor({
+      container: trackThoughtsEl,
+      getThoughts: () => track.thoughts,
+      dateInput: newTrackThoughtDateEl,
+      textInput: newTrackThoughtTextEl,
+      addBtn: addTrackThoughtBtn,
+      onChange: saveTrack,
+    });
 
     async function saveTrack() {
       await fetch(`/api/music/${albumId}/tracks/${track.id}`, {
@@ -436,18 +411,6 @@
       saveTrack();
     });
 
-    addTrackThoughtBtn.addEventListener("click", () => {
-      const date = newTrackThoughtDateEl.value;
-      const text = newTrackThoughtTextEl.value.trim();
-      if (!date || !text) return;
-      track.thoughts.push({ date, text });
-      track.thoughts.sort((a, b) => a.date.localeCompare(b.date));
-      newTrackThoughtDateEl.value = "";
-      newTrackThoughtTextEl.value = "";
-      renderTrackThoughts();
-      saveTrack();
-    });
-
     delBtn.addEventListener("click", async () => {
       if (!confirm(`Delete track "${track.title}"?`)) return;
       await fetch(`/api/music/${albumId}/tracks/${track.id}`, { method: "DELETE" });
@@ -455,8 +418,6 @@
       if (i !== -1) currentTracks.splice(i, 1);
       details.remove();
     });
-
-    renderTrackThoughts();
 
     return details;
   }
@@ -487,7 +448,7 @@
     thoughts = [...(album.thoughts || [])];
     tags = [...(album.tags || [])];
     favorite = !!album.favorite;
-    renderThoughts();
+    thoughtsEditor.render();
     renderTags();
     updateCoverPreview();
     markClean();
@@ -532,13 +493,7 @@
     };
   }
 
-  let savedSnapshot = "";
-  function isDirty() {
-    return !detailEl.hidden && JSON.stringify(buildPayload()) !== savedSnapshot;
-  }
-  function markClean() {
-    savedSnapshot = JSON.stringify(buildPayload());
-  }
+  const { isDirty, markClean } = createDirtyTracker(buildPayload, { isVisible: () => !detailEl.hidden });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();

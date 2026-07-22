@@ -96,30 +96,12 @@
       : "no poster";
   }
 
-  function renderThoughts() {
-    thoughtsEl.innerHTML = "";
-    thoughts.forEach((t, i) => {
-      const row = document.createElement("div");
-      row.className = "thought-item";
-      row.innerHTML = `<span class="thought-date">${escapeHtml(t.date)}</span><span class="thought-text">${escapeHtml(t.text)}</span><button type="button" aria-label="remove">&times;</button>`;
-      row.querySelector("button").addEventListener("click", () => {
-        if (!confirm("Delete this thought?")) return;
-        thoughts.splice(i, 1);
-        renderThoughts();
-      });
-      thoughtsEl.appendChild(row);
-    });
-  }
-
-  addThoughtBtn.addEventListener("click", () => {
-    const date = newThoughtDateEl.value;
-    const text = newThoughtTextEl.value.trim();
-    if (!date || !text) return;
-    thoughts.push({ date, text });
-    thoughts.sort((a, b) => a.date.localeCompare(b.date));
-    newThoughtDateEl.value = "";
-    newThoughtTextEl.value = "";
-    renderThoughts();
+  const thoughtsEditor = createThoughtsEditor({
+    container: thoughtsEl,
+    getThoughts: () => thoughts,
+    dateInput: newThoughtDateEl,
+    textInput: newThoughtTextEl,
+    addBtn: addThoughtBtn,
   });
 
   function renderTags() {
@@ -179,7 +161,7 @@
     thoughts = [];
     tags = [];
     favorite = false;
-    renderThoughts();
+    thoughtsEditor.render();
     renderTags();
     updateCoverPreview();
     deleteBtn.hidden = true;
@@ -244,21 +226,14 @@
       });
     }
 
-    function renderEpThoughts() {
-      epThoughtsEl.innerHTML = "";
-      ep.thoughts.forEach((t, i) => {
-        const row = document.createElement("div");
-        row.className = "thought-item";
-        row.innerHTML = `<span class="thought-date">${escapeHtml(t.date)}</span><span class="thought-text">${escapeHtml(t.text)}</span><button type="button" aria-label="remove">&times;</button>`;
-        row.querySelector("button").addEventListener("click", () => {
-          if (!confirm("Delete this thought?")) return;
-          ep.thoughts.splice(i, 1);
-          renderEpThoughts();
-          saveEpisode();
-        });
-        epThoughtsEl.appendChild(row);
-      });
-    }
+    const epThoughtsEditor = createThoughtsEditor({
+      container: epThoughtsEl,
+      getThoughts: () => ep.thoughts,
+      dateInput: newEpThoughtDateEl,
+      textInput: newEpThoughtTextEl,
+      addBtn: addEpThoughtBtn,
+      onChange: saveEpisode,
+    });
 
     async function saveEpisode() {
       await fetch(`/api/tv/${showId}/episodes/${ep.id}`, {
@@ -285,18 +260,6 @@
       saveEpisode();
     });
 
-    addEpThoughtBtn.addEventListener("click", () => {
-      const date = newEpThoughtDateEl.value;
-      const text = newEpThoughtTextEl.value.trim();
-      if (!date || !text) return;
-      ep.thoughts.push({ date, text });
-      ep.thoughts.sort((a, b) => a.date.localeCompare(b.date));
-      newEpThoughtDateEl.value = "";
-      newEpThoughtTextEl.value = "";
-      renderEpThoughts();
-      saveEpisode();
-    });
-
     delBtn.addEventListener("click", async () => {
       if (!confirm(`Delete episode ${ep.id}?`)) return;
       await fetch(`/api/tv/${showId}/episodes/${ep.id}`, { method: "DELETE" });
@@ -304,7 +267,6 @@
     });
 
     renderWatchDates();
-    renderEpThoughts();
 
     return details;
   }
@@ -351,7 +313,7 @@
     thoughts = [...(show.thoughts || [])];
     tags = [...(show.tags || [])];
     favorite = !!show.favorite;
-    renderThoughts();
+    thoughtsEditor.render();
     renderTags();
     updateCoverPreview();
     markClean();
@@ -430,13 +392,7 @@
     };
   }
 
-  let savedSnapshot = "";
-  function isDirty() {
-    return !detailEl.hidden && JSON.stringify(buildPayload()) !== savedSnapshot;
-  }
-  function markClean() {
-    savedSnapshot = JSON.stringify(buildPayload());
-  }
+  const { isDirty, markClean } = createDirtyTracker(buildPayload, { isVisible: () => !detailEl.hidden });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();

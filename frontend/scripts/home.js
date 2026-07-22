@@ -12,11 +12,8 @@
     for (const item of items) {
       const el = document.createElement("div");
       el.className = "shelf-item";
-      const coverHtml = item.cover
-        ? `<img src="${escapeHtml(item.cover)}" alt="" class="cover-img" />`
-        : `<div class="cover-placeholder">${escapeHtml((item.title || "?")[0])}</div>`;
       el.innerHTML = `
-        <div class="cover">${coverHtml}</div>
+        <div class="cover">${buildCoverHtml(item)}</div>
         <div class="item-info">
           <div class="item-title">${escapeHtml(item.title)}</div>
           ${item.subtitle ? `<div class="item-subtitle">${escapeHtml(item.subtitle)}</div>` : ""}

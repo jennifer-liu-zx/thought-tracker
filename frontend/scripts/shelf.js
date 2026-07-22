@@ -10,6 +10,14 @@ function pickDisplayTitle(item) {
   return item.show_english_title && item.english_title ? item.english_title : item.title;
 }
 
+/** Cover image, or a single-letter placeholder — shared by every place that
+ * renders an item's cover (collection grid/list, favourites panel, home swimlanes). */
+function buildCoverHtml(item) {
+  return item.cover
+    ? `<img src="${escapeHtml(item.cover)}" alt="" class="cover-img" />`
+    : `<div class="cover-placeholder">${escapeHtml((item.title || "?")[0])}</div>`;
+}
+
 /**
  * Renders a "Favourites" sidebar panel into `container` (an <aside>): a list of
  * currently-favourited items, a "+" that opens a search box to add more (from
@@ -85,12 +93,9 @@ function createFavoritesPanel({ container, fetchAll, toItem, setFavorite, onOpen
     for (const item of favorites) {
       const el = document.createElement("div");
       el.className = "favorite-item";
-      const coverHtml = item.cover
-        ? `<img src="${escapeHtml(item.cover)}" alt="" class="cover-img" />`
-        : `<div class="cover-placeholder">${escapeHtml((item.title || "?")[0])}</div>`;
       el.innerHTML = `
         <div class="favorite-cover">
-          ${coverHtml}
+          ${buildCoverHtml(item)}
           <button type="button" class="remove-favorite-btn" aria-label="Remove favourite">&times;</button>
         </div>
         <div class="item-title">${escapeHtml(item.title)}</div>
@@ -144,6 +149,131 @@ function createStarRating({ container, value, onChange }) {
     setValue(v) {
       current = v || null;
       render();
+    },
+  };
+}
+
+/**
+ * Renders an editable list of {date, text} thoughts into `container`, kept
+ * sorted most-recent-first, with inline edit (not just delete), and a
+ * "Show all" toggle once there are more than `collapseAt` entries.
+ *
+ * getThoughts(): () => thought[] — must return the caller's live, mutable
+ * array (e.g. the outer `thoughts` variable, or `ep.thoughts` /
+ * `track.thoughts`) — this sorts and splices that array in place rather than
+ * replacing the reference, so callers don't need a setter.
+ * dateInput/textInput/addBtn: the existing "new thought" form controls.
+ * onChange (optional): fires after every add/edit/delete — e.g. episodes and
+ * tracks persist immediately (PUT per change) instead of waiting for a form's
+ * own Save button.
+ */
+function createThoughtsEditor({ container, getThoughts, dateInput, textInput, addBtn, onChange, collapseAt = 4 }) {
+  let expanded = false;
+
+  function render() {
+    const thoughts = getThoughts();
+    thoughts.sort((a, b) => b.date.localeCompare(a.date));
+    container.innerHTML = "";
+
+    const visible = expanded ? thoughts : thoughts.slice(0, collapseAt);
+    for (const t of visible) {
+      const row = document.createElement("div");
+      row.className = "thought-item";
+      row.innerHTML = `
+        <div class="thought-view">
+          <span class="thought-date">${escapeHtml(t.date)}</span>
+          <span class="thought-text">${escapeHtml(t.text)}</span>
+          <span class="thought-actions">
+            <button type="button" class="thought-edit-btn" aria-label="edit">edit</button>
+            <button type="button" class="thought-delete-btn" aria-label="remove">&times;</button>
+          </span>
+        </div>
+        <div class="thought-edit-form" hidden>
+          <input type="date" class="thought-edit-date" value="${escapeHtml(t.date)}" />
+          <textarea class="thought-textarea thought-edit-text" rows="2">${escapeHtml(t.text)}</textarea>
+          <div class="thought-edit-actions">
+            <button type="button" class="thought-save-btn">Save</button>
+            <button type="button" class="thought-cancel-btn">Cancel</button>
+          </div>
+        </div>
+      `;
+
+      const viewEl = row.querySelector(".thought-view");
+      const editEl = row.querySelector(".thought-edit-form");
+
+      row.querySelector(".thought-edit-btn").addEventListener("click", () => {
+        viewEl.hidden = true;
+        editEl.hidden = false;
+      });
+      row.querySelector(".thought-cancel-btn").addEventListener("click", () => {
+        viewEl.hidden = false;
+        editEl.hidden = true;
+      });
+      row.querySelector(".thought-save-btn").addEventListener("click", () => {
+        const date = row.querySelector(".thought-edit-date").value;
+        const text = row.querySelector(".thought-edit-text").value.trim();
+        if (!date || !text) return;
+        const idx = thoughts.indexOf(t);
+        thoughts[idx] = { date, text };
+        render();
+        if (onChange) onChange();
+      });
+      row.querySelector(".thought-delete-btn").addEventListener("click", () => {
+        if (!confirm("Delete this thought?")) return;
+        thoughts.splice(thoughts.indexOf(t), 1);
+        render();
+        if (onChange) onChange();
+      });
+
+      container.appendChild(row);
+    }
+
+    if (thoughts.length > collapseAt) {
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "thoughts-toggle";
+      toggle.textContent = expanded ? "Show fewer" : `Show all ${thoughts.length}`;
+      toggle.addEventListener("click", () => {
+        expanded = !expanded;
+        render();
+      });
+      container.appendChild(toggle);
+    }
+  }
+
+  addBtn.addEventListener("click", () => {
+    const date = dateInput.value;
+    const text = textInput.value.trim();
+    if (!date || !text) return;
+    getThoughts().push({ date, text });
+    dateInput.value = "";
+    textInput.value = "";
+    render();
+    if (onChange) onChange();
+  });
+
+  render();
+
+  return { render };
+}
+
+/**
+ * Tracks whether a form's current values differ from its last-saved state,
+ * without needing per-field input listeners — dirtiness is computed on demand
+ * from buildPayload(), the same shape every detail-view PUT/POST body uses.
+ *
+ * buildPayload(): () => object — the current form state.
+ * isVisible (optional): () => bool — gates isDirty (e.g. only while the detail
+ * view is shown, not the browse view); defaults to always true.
+ */
+function createDirtyTracker(buildPayload, { isVisible } = {}) {
+  let savedSnapshot = "";
+  return {
+    isDirty() {
+      return (isVisible ? isVisible() : true) && JSON.stringify(buildPayload()) !== savedSnapshot;
+    },
+    markClean() {
+      savedSnapshot = JSON.stringify(buildPayload());
     },
   };
 }
@@ -281,11 +411,8 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
       const el = document.createElement("div");
       el.className = "item";
       el.dataset.id = item.id;
-      const coverHtml = item.cover
-        ? `<img src="${escapeHtml(item.cover)}" alt="" class="cover-img" />`
-        : `<div class="cover-placeholder">${escapeHtml((item.title || "?")[0])}</div>`;
       el.innerHTML = `
-        <div class="cover">${coverHtml}</div>
+        <div class="cover">${buildCoverHtml(item)}</div>
         <div class="item-info">
           <div class="item-title">${escapeHtml(item.title)}</div>
           ${item.subtitle ? `<div class="item-subtitle">${escapeHtml(item.subtitle)}</div>` : ""}

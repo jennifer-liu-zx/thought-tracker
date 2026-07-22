@@ -1,6 +1,6 @@
-/* Home page: favourites swimlanes, styled like angled shelves.
-   This tilt treatment is deliberately only used here — the per-section
-   browse views use plain grid/list, per a later decision to simplify those. */
+/* Home page: favourites swimlanes. Covers face straight-on and expand
+   slightly on hover — the per-section browse views use plain grid/list,
+   per a later decision to simplify those. */
 
 .swimlane {
   margin-bottom: 3rem;
@@ -18,7 +18,7 @@
 .shelf-lane {
   display: flex;
   gap: 2rem;
-  align-items: flex-end;
+  align-items: flex-start;
   overflow-x: auto;
   overflow-y: hidden;
   padding: 1.5rem 0.5rem 2rem;
@@ -40,22 +40,18 @@
   background: var(--color-bg-hover);
   overflow: hidden;
   border-radius: 2px;
-  box-shadow: -10px 8px 16px rgba(0, 0, 0, 0.25);
-  transform: rotateY(24deg);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.shelf-item .cover::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.32) 0%, rgba(0, 0, 0, 0) 12%);
-  pointer-events: none;
+.shelf-item:hover {
+  position: relative;
+  z-index: 1;
 }
 
 .shelf-item:hover .cover {
-  transform: rotateY(0deg);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  transform: scale(1.06);
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.28);
 }
 
 #home-music-lane .cover {

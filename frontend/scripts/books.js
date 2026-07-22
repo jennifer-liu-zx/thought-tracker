@@ -140,21 +140,6 @@
     });
   }
 
-  function renderThoughts() {
-    thoughtsEl.innerHTML = "";
-    thoughts.forEach((t, i) => {
-      const row = document.createElement("div");
-      row.className = "thought-item";
-      row.innerHTML = `<span class="thought-date">${escapeHtml(t.date)}</span><span class="thought-text">${escapeHtml(t.text)}</span><button type="button" aria-label="remove">&times;</button>`;
-      row.querySelector("button").addEventListener("click", () => {
-        if (!confirm("Delete this thought?")) return;
-        thoughts.splice(i, 1);
-        renderThoughts();
-      });
-      thoughtsEl.appendChild(row);
-    });
-  }
-
   addReadDateBtn.addEventListener("click", () => {
     const date = newReadDateEl.value;
     const format = newReadDateFormatEl.value;
@@ -173,15 +158,12 @@
     renderTags();
   });
 
-  addThoughtBtn.addEventListener("click", () => {
-    const date = newThoughtDateEl.value;
-    const text = newThoughtTextEl.value.trim();
-    if (!date || !text) return;
-    thoughts.push({ date, text });
-    thoughts.sort((a, b) => a.date.localeCompare(b.date));
-    newThoughtDateEl.value = "";
-    newThoughtTextEl.value = "";
-    renderThoughts();
+  const thoughtsEditor = createThoughtsEditor({
+    container: thoughtsEl,
+    getThoughts: () => thoughts,
+    dateInput: newThoughtDateEl,
+    textInput: newThoughtTextEl,
+    addBtn: addThoughtBtn,
   });
 
   coverEl.addEventListener("input", updateCoverPreview);
@@ -232,7 +214,7 @@
     newReadDateFormatEl.value = "physical";
     newTagTextEl.value = "";
     renderReadDates();
-    renderThoughts();
+    thoughtsEditor.render();
     renderTags();
     updateCoverPreview();
     deleteBtn.hidden = true;
@@ -265,7 +247,7 @@
     ratingWidget.setValue(rating);
     favorite = !!book.favorite;
     renderReadDates();
-    renderThoughts();
+    thoughtsEditor.render();
     renderTags();
     updateCoverPreview();
     markClean();
@@ -350,13 +332,7 @@
     };
   }
 
-  let savedSnapshot = "";
-  function isDirty() {
-    return !detailEl.hidden && JSON.stringify(buildPayload()) !== savedSnapshot;
-  }
-  function markClean() {
-    savedSnapshot = JSON.stringify(buildPayload());
-  }
+  const { isDirty, markClean } = createDirtyTracker(buildPayload, { isVisible: () => !detailEl.hidden });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();

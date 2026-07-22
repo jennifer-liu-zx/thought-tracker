@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from app.config import TV_DIR
 from app.external.tmdb import get_season_episodes, search_tv
 from app.models import EpisodeIn, EpisodeOut, ShowDetailOut, ShowIn, ShowOut
-from app.storage import read_entry, slugify, unique_dir, write_entry
+from app.storage import read_entry, require_exists, slugify, unique_dir, write_entry
 
 router = APIRouter(prefix="/api/tv", tags=["tv"])
 
@@ -77,9 +77,7 @@ def create_show(show: ShowIn):
 
 @router.get("/{show_id}", response_model=ShowDetailOut)
 def get_show(show_id: str):
-    path = _show_path(show_id)
-    if not path.exists():
-        raise HTTPException(status_code=404, detail="Show not found")
+    path = require_exists(_show_path(show_id), "Show not found")
     metadata, content = read_entry(path)
     episodes = []
     for ep_path in _list_episode_files(show_id):
@@ -92,9 +90,7 @@ def get_show(show_id: str):
 
 @router.put("/{show_id}", response_model=ShowOut)
 def update_show(show_id: str, show: ShowIn):
-    path = _show_path(show_id)
-    if not path.exists():
-        raise HTTPException(status_code=404, detail="Show not found")
+    path = require_exists(_show_path(show_id), "Show not found")
     metadata = show.model_dump(exclude={"notes"})
     write_entry(path, metadata, show.notes)
     return _show_to_out(show_id, metadata, show.notes)
@@ -102,18 +98,14 @@ def update_show(show_id: str, show: ShowIn):
 
 @router.delete("/{show_id}")
 def delete_show(show_id: str):
-    show_dir = _show_dir(show_id)
-    if not show_dir.exists():
-        raise HTTPException(status_code=404, detail="Show not found")
+    show_dir = require_exists(_show_dir(show_id), "Show not found")
     shutil.rmtree(show_dir)
     return {"ok": True}
 
 
 @router.post("/{show_id}/import-season", response_model=list[EpisodeOut])
 async def import_season(show_id: str, season_number: int):
-    path = _show_path(show_id)
-    if not path.exists():
-        raise HTTPException(status_code=404, detail="Show not found")
+    path = require_exists(_show_path(show_id), "Show not found")
     metadata, _ = read_entry(path)
     tmdb_id = metadata.get("tmdb_id")
     if not tmdb_id:
@@ -149,8 +141,7 @@ async def import_season(show_id: str, season_number: int):
 
 @router.put("/{show_id}/episodes/{episode_id}", response_model=EpisodeOut)
 def upsert_episode(show_id: str, episode_id: str, episode: EpisodeIn):
-    if not _show_path(show_id).exists():
-        raise HTTPException(status_code=404, detail="Show not found")
+    require_exists(_show_path(show_id), "Show not found")
     path = _episode_path(show_id, episode_id)
     metadata = episode.model_dump()
     write_entry(path, metadata, "")
@@ -159,8 +150,6 @@ def upsert_episode(show_id: str, episode_id: str, episode: EpisodeIn):
 
 @router.delete("/{show_id}/episodes/{episode_id}")
 def delete_episode(show_id: str, episode_id: str):
-    path = _episode_path(show_id, episode_id)
-    if not path.exists():
-        raise HTTPException(status_code=404, detail="Episode not found")
+    path = require_exists(_episode_path(show_id, episode_id), "Episode not found")
     path.unlink()
     return {"ok": True}
