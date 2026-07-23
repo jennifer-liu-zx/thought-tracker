@@ -76,7 +76,9 @@ function createFavoritesPanel({ container, fetchAll, toItem, setFavorite, onOpen
       const q = searchInput.value.trim().toLowerCase();
       searchResults.innerHTML = "";
       if (!q) return;
-      const matches = allItems.filter((it) => !it.favorite && it.title.toLowerCase().includes(q)).slice(0, 8);
+      const matches = allItems
+        .filter((it) => !it.favorite && `${it.title} ${it.keywords || ""}`.toLowerCase().includes(q))
+        .slice(0, 8);
       for (const item of matches) {
         const row = document.createElement("div");
         row.className = "favorite-search-result";

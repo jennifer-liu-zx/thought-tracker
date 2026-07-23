@@ -47,6 +47,7 @@
   let crew = [];
   let rating = null;
   let favorite = false;
+  let favoriteOrder = null;
   let searchDebounce = null;
 
   const ratingWidget = createStarRating({
@@ -83,7 +84,14 @@
   const favoritesPanel = createFavoritesPanel({
     container: document.getElementById("movies-favorites"),
     fetchAll: () => fetch("/api/movies").then((r) => r.json()),
-    toItem: (m) => ({ id: m.id, title: pickDisplayTitle(m), subtitle: m.year, cover: m.poster, favorite: m.favorite }),
+    toItem: (m) => ({
+      id: m.id,
+      title: pickDisplayTitle(m),
+      subtitle: m.year,
+      cover: m.poster,
+      favorite: m.favorite,
+      keywords: m.english_title,
+    }),
     setFavorite: setMovieFavorite,
     onOpen: (id) => selectMovie(id),
   });
@@ -233,6 +241,7 @@
     rating = null;
     ratingWidget.setValue(null);
     favorite = false;
+    favoriteOrder = null;
     renderWatchDates();
     thoughtsEditor.render();
     renderTags();
@@ -263,6 +272,7 @@
     rating = movie.rating || null;
     ratingWidget.setValue(rating);
     favorite = !!movie.favorite;
+    favoriteOrder = movie.favorite_order ?? null;
     renderWatchDates();
     thoughtsEditor.render();
     renderTags();
@@ -340,6 +350,7 @@
       crew: crew,
       rating: rating,
       favorite: favorite,
+      favorite_order: favoriteOrder,
       watch_dates: watchDates,
       thoughts: thoughts,
     };

@@ -72,6 +72,7 @@
   let tags = [];
   let rating = null;
   let favorite = false;
+  let favoriteOrder = null;
   let searchDebounce = null;
 
   const ratingWidget = createStarRating({
@@ -107,7 +108,14 @@
   const favoritesPanel = createFavoritesPanel({
     container: document.getElementById("books-favorites"),
     fetchAll: () => fetch("/api/books").then((r) => r.json()),
-    toItem: (b) => ({ id: b.id, title: pickDisplayTitle(b), subtitle: b.author, cover: b.cover, favorite: b.favorite }),
+    toItem: (b) => ({
+      id: b.id,
+      title: pickDisplayTitle(b),
+      subtitle: b.author,
+      cover: b.cover,
+      favorite: b.favorite,
+      keywords: b.english_title,
+    }),
     setFavorite: setBookFavorite,
     onOpen: (id) => selectBook(id),
   });
@@ -250,6 +258,7 @@
     rating = null;
     ratingWidget.setValue(null);
     favorite = false;
+    favoriteOrder = null;
     readDateFormatSelect.setValue("physical");
     newTagTextEl.value = "";
     renderReadDates();
@@ -286,6 +295,7 @@
     rating = book.rating || null;
     ratingWidget.setValue(rating);
     favorite = !!book.favorite;
+    favoriteOrder = book.favorite_order ?? null;
     renderReadDates();
     thoughtsEditor.render();
     renderTags();
@@ -368,6 +378,7 @@
       tags: tags,
       rating: rating,
       favorite: favorite,
+      favorite_order: favoriteOrder,
       read_dates: readDates,
       thoughts: thoughts,
     };

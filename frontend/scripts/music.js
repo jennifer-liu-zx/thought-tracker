@@ -44,6 +44,7 @@
   let thoughts = [];
   let tags = [];
   let favorite = false;
+  let favoriteOrder = null;
   let currentAlbumId = null;
   let currentTracks = [];
   let draggingTrackId = null;
@@ -118,6 +119,7 @@
       subtitle: t.album_artist,
       cover: t.album_cover,
       favorite: t.favorite,
+      keywords: t.english_title,
     }),
     setFavorite: setTrackFavorite,
     onOpen: openFavoriteTrack,
@@ -228,6 +230,7 @@
     thoughts = [];
     tags = [];
     favorite = false;
+    favoriteOrder = null;
     thoughtsEditor.render();
     renderTags();
     updateCoverPreview();
@@ -457,6 +460,8 @@
           producers: track.producers || "",
           featuring: track.featuring || "",
           label: track.label || "",
+          favorite: track.favorite,
+          favorite_order: track.favorite_order,
           thoughts: track.thoughts,
         }),
       });
@@ -518,6 +523,7 @@
     thoughts = [...(album.thoughts || [])];
     tags = [...(album.tags || [])];
     favorite = !!album.favorite;
+    favoriteOrder = album.favorite_order ?? null;
     thoughtsEditor.render();
     renderTags();
     updateCoverPreview();
@@ -560,6 +566,7 @@
       notes: notesEl.value,
       tags: tags,
       favorite: favorite,
+      favorite_order: favoriteOrder,
       thoughts: thoughts,
     };
   }

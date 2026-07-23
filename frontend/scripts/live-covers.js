@@ -31,6 +31,7 @@
   let thoughts = [];
   let tags = [];
   let favorite = false;
+  let favoriteOrder = null;
 
   const collectionView = createCollectionView({
     container: collectionEl,
@@ -64,6 +65,7 @@
       subtitle: e.artist,
       cover: e.cover,
       favorite: e.favorite,
+      keywords: e.english_title,
     }),
     setFavorite: setEntryFavorite,
     onOpen: (id) => selectEntry(id),
@@ -154,6 +156,7 @@
     thoughts = [];
     tags = [];
     favorite = false;
+    favoriteOrder = null;
     thoughtsEditor.render();
     tagsEditor.render();
     updateCoverPreview();
@@ -176,6 +179,7 @@
     thoughts = [...(entry.thoughts || [])];
     tags = [...(entry.tags || [])];
     favorite = !!entry.favorite;
+    favoriteOrder = entry.favorite_order ?? null;
     thoughtsEditor.render();
     tagsEditor.render();
     updateCoverPreview();
@@ -215,6 +219,7 @@
       notes: notesEl.value,
       tags: tags,
       favorite: favorite,
+      favorite_order: favoriteOrder,
       thoughts: thoughts,
     };
   }

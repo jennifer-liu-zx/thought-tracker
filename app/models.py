@@ -202,6 +202,7 @@ class LiveCoverIn(BaseModel):
     link: str = ""  # URL to the recording/video
     tags: list[str] = []
     favorite: bool = False
+    favorite_order: int | None = None  # manual drag-reorder position in the home page favourites lane
     thoughts: list[Thought] = []
     notes: str = ""
 

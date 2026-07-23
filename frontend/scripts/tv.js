@@ -51,6 +51,7 @@
   let cast = [];
   let crew = [];
   let favorite = false;
+  let favoriteOrder = null;
   let searchDebounce = null;
   let tmdbId = null;
 
@@ -79,7 +80,14 @@
   const favoritesPanel = createFavoritesPanel({
     container: document.getElementById("tv-favorites"),
     fetchAll: () => fetch("/api/tv").then((r) => r.json()),
-    toItem: (s) => ({ id: s.id, title: pickDisplayTitle(s), subtitle: s.year, cover: s.poster, favorite: s.favorite }),
+    toItem: (s) => ({
+      id: s.id,
+      title: pickDisplayTitle(s),
+      subtitle: s.year,
+      cover: s.poster,
+      favorite: s.favorite,
+      keywords: s.english_title,
+    }),
     setFavorite: setShowFavorite,
     onOpen: (id) => selectShow(id),
   });
@@ -201,6 +209,7 @@
     cast = [];
     crew = [];
     favorite = false;
+    favoriteOrder = null;
     thoughtsEditor.render();
     renderTags();
     castEditor.render();
@@ -416,6 +425,7 @@
     cast = [...(show.cast || [])];
     crew = [...(show.crew || [])];
     favorite = !!show.favorite;
+    favoriteOrder = show.favorite_order ?? null;
     thoughtsEditor.render();
     renderTags();
     castEditor.render();
@@ -496,6 +506,7 @@
       cast: cast,
       crew: crew,
       favorite: favorite,
+      favorite_order: favoriteOrder,
       thoughts: thoughts,
     };
   }
