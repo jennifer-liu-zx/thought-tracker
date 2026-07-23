@@ -18,6 +18,7 @@
   const coverEl = document.getElementById("show-cover");
   const coverPreviewEl = document.getElementById("show-cover-preview");
   const coverUploadEl = document.getElementById("show-cover-upload");
+  const coverRemoveBtn = document.getElementById("show-cover-remove-btn");
   const notesEl = document.getElementById("show-notes");
   const thoughtsEl = document.getElementById("show-thoughts");
   const newThoughtDateEl = document.getElementById("new-show-thought-date");
@@ -39,13 +40,14 @@
   const importSeasonNumberEl = document.getElementById("import-season-number");
   const importSeasonBtn = document.getElementById("import-season-btn");
   const manualEpSeason = document.getElementById("manual-ep-season");
-  const manualEpEpisode = document.getElementById("manual-ep-episode");
   const manualEpName = document.getElementById("manual-ep-name");
   const manualEpAirdate = document.getElementById("manual-ep-airdate");
   const manualEpSaveBtn = document.getElementById("manual-ep-save-btn");
 
   let thoughts = [];
   let tags = [];
+  let currentEpisodes = [];
+  let draggingEpisodeId = null;
   let cast = [];
   let crew = [];
   let favorite = false;
@@ -92,7 +94,8 @@
         subtitle: `${s.year || ""}${s.year ? " · " : ""}${s.episode_count} episode${s.episode_count === 1 ? "" : "s"}`,
         cover: s.poster,
         year: s.year,
-        tags: [...(s.tags || []), ...(s.cast || []), ...(s.crew || [])],
+        tags: s.tags || [],
+        extraTags: [...(s.cast || []), ...(s.crew || [])], // hidden from the default tag list, but shows up once you search for a name
         keywords: [...(s.tags || []), ...(s.cast || []), ...(s.crew || []), s.title, s.english_title].join(" "),
       }))
     );
@@ -156,6 +159,12 @@
 
   coverEl.addEventListener("input", updateCoverPreview);
 
+  coverRemoveBtn.addEventListener("click", () => {
+    coverEl.value = "";
+    coverUploadEl.value = "";
+    updateCoverPreview();
+  });
+
   coverUploadEl.addEventListener("change", () => {
     const file = coverUploadEl.files[0];
     if (!file) return;
@@ -212,8 +221,41 @@
     details.className = "episode-item";
 
     const summary = document.createElement("summary");
-    summary.innerHTML = `<span class="ep-num">E${String(ep.episode).padStart(2, "0")}</span><span class="ep-name">${ep.name || "(untitled)"}</span><span class="ep-air-date">${ep.air_date || ""}</span>`;
+    summary.innerHTML = `<span class="drag-handle" draggable="true" title="Drag to reorder">⠿</span><span class="ep-num">E${String(ep.episode).padStart(2, "0")}</span><span class="ep-name">${ep.name || "(untitled)"}</span><span class="ep-air-date">${ep.air_date || ""}</span>`;
     details.appendChild(summary);
+
+    const dragHandle = summary.querySelector(".drag-handle");
+    dragHandle.addEventListener("click", (e) => e.preventDefault());
+    dragHandle.addEventListener("dragstart", (e) => {
+      draggingEpisodeId = ep.id;
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", ep.id);
+    });
+    dragHandle.addEventListener("dragend", () => {
+      draggingEpisodeId = null;
+    });
+
+    details.addEventListener("dragover", (e) => {
+      if (!draggingEpisodeId || draggingEpisodeId === ep.id) return;
+      // Reordering only ever happens within one season (episode numbers are
+      // scoped per-season), so dragging across seasons is a no-op.
+      const dragged = currentEpisodes.find((e2) => e2.id === draggingEpisodeId);
+      if (!dragged || dragged.season !== ep.season) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      details.classList.add("drag-over");
+    });
+    details.addEventListener("dragleave", () => {
+      details.classList.remove("drag-over");
+    });
+    details.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      details.classList.remove("drag-over");
+      const draggedId = draggingEpisodeId;
+      draggingEpisodeId = null;
+      if (!draggedId || draggedId === ep.id) return;
+      await reorderEpisodes(showId, ep.season, draggedId, ep.id);
+    });
 
     const body = document.createElement("div");
     body.className = "episode-body";
@@ -296,6 +338,7 @@
     delBtn.addEventListener("click", async () => {
       if (!confirm(`Delete episode ${ep.id}?`)) return;
       await fetch(`/api/tv/${showId}/episodes/${ep.id}`, { method: "DELETE" });
+      currentEpisodes = currentEpisodes.filter((e) => e.id !== ep.id);
       details.remove();
     });
 
@@ -305,7 +348,29 @@
     return details;
   }
 
+  async function reorderEpisodes(showId, seasonNumber, draggedId, targetId) {
+    const seasonEpisodes = currentEpisodes
+      .filter((e) => e.season === seasonNumber)
+      .sort((a, b) => a.episode - b.episode);
+    const fromIndex = seasonEpisodes.findIndex((e) => e.id === draggedId);
+    const toIndex = seasonEpisodes.findIndex((e) => e.id === targetId);
+    if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return;
+
+    const [moved] = seasonEpisodes.splice(fromIndex, 1);
+    seasonEpisodes.splice(toIndex, 0, moved);
+
+    const res = await fetch(`/api/tv/${showId}/seasons/${seasonNumber}/reorder`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(seasonEpisodes.map((e) => e.id)),
+    });
+    const updatedSeason = await res.json();
+    currentEpisodes = [...currentEpisodes.filter((e) => e.season !== seasonNumber), ...updatedSeason];
+    renderEpisodes(showId, currentEpisodes);
+  }
+
   function renderEpisodes(showId, episodes) {
+    currentEpisodes = episodes;
     episodesListEl.innerHTML = "";
     const bySeason = new Map();
     for (const ep of episodes) {
@@ -377,6 +442,7 @@
   });
 
   backBtn.addEventListener("click", () => {
+    if (isDirty() && !confirm("You have unsaved changes. Leave without saving?")) return;
     showBrowse();
     loadShows();
     favoritesPanel.refresh();
@@ -434,7 +500,10 @@
     };
   }
 
-  const { isDirty, markClean } = createDirtyTracker(buildPayload, { isVisible: () => !detailEl.hidden });
+  const { isDirty, markClean } = createDirtyTracker(buildPayload, {
+    isVisible: () => !detailEl.hidden,
+    indicatorEl: document.getElementById("show-unsaved-indicator"),
+  });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -464,24 +533,26 @@
   manualEpSaveBtn.addEventListener("click", async () => {
     const showId = idEl.value;
     const season = parseInt(manualEpSeason.value, 10);
-    const episode = parseInt(manualEpEpisode.value, 10);
-    if (!showId || !season || !episode) return;
-    const episodeId = `s${String(season).padStart(2, "0")}e${String(episode).padStart(2, "0")}`;
+    const name = manualEpName.value.trim();
+    if (!showId || !season || !name) return;
+    // Episode number isn't user-entered — append to the end of the season
+    // (drag the handle afterward to reorder, same as album tracks).
+    const nextEpisode = Math.max(0, ...currentEpisodes.filter((e) => e.season === season).map((e) => e.episode)) + 1;
+    const episodeId = `s${String(season).padStart(2, "0")}e${String(nextEpisode).padStart(2, "0")}`;
     await fetch(`/api/tv/${showId}/episodes/${episodeId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         season,
-        episode,
-        name: manualEpName.value,
+        episode: nextEpisode,
+        name,
         air_date: manualEpAirdate.value,
         watch_dates: [],
         thoughts: [],
       }),
     });
-    // Keep the season, bump the episode number, and clear just the per-episode
-    // fields — makes adding a whole season back-to-back a single repeated click.
-    manualEpEpisode.value = episode + 1;
+    // Keep the season, clear just the per-episode fields — makes adding a
+    // whole season back-to-back a single repeated click.
     manualEpName.value = "";
     manualEpAirdate.value = "";
     await selectShow(showId);

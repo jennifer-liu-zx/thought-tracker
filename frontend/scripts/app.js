@@ -19,6 +19,17 @@ function resetSectionToBrowse(section) {
   keys.forEach((k) => window.Diary?.[k]?.showBrowse?.());
 }
 
+const brandHomeLink = document.getElementById("brand-home-link");
+brandHomeLink.addEventListener("click", () => {
+  document.querySelector('.nav-btn[data-section="home"]').click();
+});
+brandHomeLink.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    brandHomeLink.click();
+  }
+});
+
 document.querySelectorAll(".nav-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     const currentBtn = document.querySelector(".nav-btn.active");

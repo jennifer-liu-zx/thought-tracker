@@ -26,6 +26,7 @@
   const coverEl = document.getElementById("book-cover");
   const coverPreviewEl = document.getElementById("book-cover-preview");
   const coverUploadEl = document.getElementById("book-cover-upload");
+  const coverRemoveBtn = document.getElementById("book-cover-remove-btn");
   const notesEl = document.getElementById("book-notes");
   const readDatesEl = document.getElementById("book-read-dates");
   const newReadDateEl = document.getElementById("new-read-date");
@@ -174,6 +175,12 @@
 
   coverEl.addEventListener("input", updateCoverPreview);
 
+  coverRemoveBtn.addEventListener("click", () => {
+    coverEl.value = "";
+    coverUploadEl.value = "";
+    updateCoverPreview();
+  });
+
   coverUploadEl.addEventListener("change", () => {
     const file = coverUploadEl.files[0];
     if (!file) return;
@@ -277,6 +284,7 @@
   });
 
   backBtn.addEventListener("click", () => {
+    if (isDirty() && !confirm("You have unsaved changes. Leave without saving?")) return;
     showBrowse();
     loadBooks();
   });
@@ -340,7 +348,10 @@
     };
   }
 
-  const { isDirty, markClean } = createDirtyTracker(buildPayload, { isVisible: () => !detailEl.hidden });
+  const { isDirty, markClean } = createDirtyTracker(buildPayload, {
+    isVisible: () => !detailEl.hidden,
+    indicatorEl: document.getElementById("book-unsaved-indicator"),
+  });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();

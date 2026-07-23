@@ -2,7 +2,7 @@ from collections import defaultdict
 
 from fastapi import APIRouter
 
-from app.config import BOOKS_DIR, JOURNAL_DIR, MOVIES_DIR, MUSIC_DIR, TV_DIR
+from app.config import BOOKS_DIR, JOURNAL_DIR, LIVE_COVERS_DIR, MOVIES_DIR, MUSIC_DIR, TV_DIR
 from app.storage import read_entry
 
 router = APIRouter(prefix="/api/calendar", tags=["calendar"])
@@ -64,6 +64,11 @@ def _iter_thought_sources():
                         track_title,
                         track_meta.get("thoughts", []),
                     )
+
+    if LIVE_COVERS_DIR.exists():
+        for path in sorted(LIVE_COVERS_DIR.glob("*.md")):
+            metadata, _ = read_entry(path)
+            yield "music", "live_cover", {"id": path.stem}, metadata.get("title", ""), metadata.get("thoughts", [])
 
 
 def _iter_journal_entries():

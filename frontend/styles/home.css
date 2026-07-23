@@ -3,7 +3,7 @@
    per a later decision to simplify those. */
 
 .swimlane {
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
 }
 
 .swimlane-title {
@@ -21,7 +21,14 @@
   align-items: flex-start;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 1.5rem 0.5rem 2rem;
+  padding: 1.5rem 0.5rem 0.5rem;
+  /* Still scrollable by drag/wheel — just don't reserve a visible
+     scrollbar strip that pads out the bottom of every lane. */
+  scrollbar-width: none;
+}
+
+.shelf-lane::-webkit-scrollbar {
+  display: none;
 }
 
 .shelf-lane .empty-msg {
@@ -32,6 +39,16 @@
   flex-shrink: 0;
   width: 130px;
   cursor: pointer;
+  touch-action: none; /* pointer-based drag-reorder needs to own touch gestures itself */
+}
+
+.shelf-item.dragging {
+  cursor: grabbing;
+  opacity: 0.9;
+}
+
+.shelf-item-placeholder {
+  visibility: hidden;
 }
 
 .shelf-item .cover {
@@ -85,6 +102,10 @@
   font-family: var(--font-serif);
   font-size: 0.9rem;
   line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .shelf-item .item-subtitle {

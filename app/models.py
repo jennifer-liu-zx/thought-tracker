@@ -10,6 +10,7 @@ class JournalEntryIn(BaseModel):
     title: str
     date: str  # ISO 8601, YYYY-MM-DD
     body: str = ""
+    tags: list[str] = []
 
 
 class JournalEntryOut(BaseModel):
@@ -17,6 +18,7 @@ class JournalEntryOut(BaseModel):
     title: str
     date: str
     body: str
+    tags: list[str] = []
 
 
 class ReadDate(BaseModel):
@@ -47,6 +49,7 @@ class BookIn(BaseModel):
     tags: list[str] = []
     rating: float | None = None  # 0.5-5, in 0.5 steps
     favorite: bool = False
+    favorite_order: int | None = None  # manual drag-reorder position in the home page favourites lane
     read_dates: list[ReadDate] = []
     thoughts: list[Thought] = []
     notes: str = ""
@@ -68,6 +71,7 @@ class MovieIn(BaseModel):
     crew: list[str] = []
     rating: float | None = None  # 0.5-5, in 0.5 steps
     favorite: bool = False
+    favorite_order: int | None = None  # manual drag-reorder position in the home page favourites lane
     watch_dates: list[WatchDate] = []
     thoughts: list[Thought] = []
     notes: str = ""
@@ -97,6 +101,7 @@ class ShowIn(BaseModel):
     cast: list[str] = []
     crew: list[str] = []
     favorite: bool = False
+    favorite_order: int | None = None  # manual drag-reorder position in the home page favourites lane
     thoughts: list[Thought] = []
     notes: str = ""
 
@@ -132,6 +137,7 @@ class AlbumIn(BaseModel):
     cover: str = ""
     tags: list[str] = []
     favorite: bool = False
+    favorite_order: int | None = None  # manual drag-reorder position in the home page favourites lane
     release_type: str = "album"  # album | ep | single
     thoughts: list[Thought] = []
     notes: str = ""

@@ -1,5 +1,6 @@
 (function () {
   const todayWidget = document.getElementById("today-widget");
+  const todayWeekdayEl = document.getElementById("today-weekday");
   const todayDayEl = document.getElementById("today-widget-day");
   const todayMonthEl = document.getElementById("today-widget-month");
 
@@ -9,6 +10,7 @@
   const prevBtn = document.getElementById("calendar-prev-month");
   const nextBtn = document.getElementById("calendar-next-month");
   const closeBtn = document.getElementById("calendar-close-btn");
+  const categoryFilterEl = document.getElementById("calendar-category-filter");
 
   const dayPanel = document.getElementById("calendar-day-panel");
   const dayPanelTitleEl = document.getElementById("calendar-day-panel-title");
@@ -19,10 +21,20 @@
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December",
   ];
+  const WEEKDAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const CATEGORY_LABELS = { movies_tv: "movie & tv", books: "book", music: "music", random: "random" };
 
   let viewYear;
   let viewMonth; // 1-12
+  let lastCounts = {};
+  let currentDayStr = null;
+  let lastDayItems = [];
+
+  function getActiveCategories() {
+    return new Set(
+      [...categoryFilterEl.querySelectorAll("input:checked")].map((cb) => cb.value)
+    );
+  }
 
   function todayLocalISO() {
     const d = new Date();
@@ -32,6 +44,7 @@
 
   function renderTodayWidget() {
     const now = new Date();
+    todayWeekdayEl.textContent = WEEKDAY_NAMES[now.getDay()];
     todayDayEl.textContent = now.getDate();
     todayMonthEl.textContent = MONTH_NAMES[now.getMonth()];
   }
@@ -41,14 +54,19 @@
     viewMonth = month;
     modal.hidden = false;
     dayPanel.hidden = true;
+    currentDayStr = null;
     await renderMonth();
   }
 
   async function renderMonth() {
     monthTitleEl.textContent = `${MONTH_NAMES[viewMonth - 1]} ${viewYear}`;
     const res = await fetch(`/api/calendar/counts?year=${viewYear}&month=${viewMonth}`);
-    const counts = await res.json();
+    lastCounts = await res.json();
+    renderGrid();
+  }
 
+  function renderGrid() {
+    const activeCategories = getActiveCategories();
     gridEl.innerHTML = "";
     const startWeekday = new Date(viewYear, viewMonth - 1, 1).getDay(); // 0 = Sunday
     const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
@@ -62,9 +80,9 @@
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${viewYear}-${String(viewMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-      const dayCounts = counts[dateStr] || {};
+      const dayCounts = lastCounts[dateStr] || {};
       const summaryLines = Object.entries(dayCounts)
-        .filter(([, n]) => n > 0)
+        .filter(([cat, n]) => n > 0 && activeCategories.has(cat))
         .map(([cat, n]) => `${n} ${CATEGORY_LABELS[cat] || cat} thought${n === 1 ? "" : "s"}`);
 
       const cell = document.createElement("div");
@@ -79,9 +97,18 @@
   }
 
   async function openDayPanel(dateStr) {
+    currentDayStr = dateStr;
     const res = await fetch(`/api/calendar/day/${dateStr}`);
-    const items = await res.json();
-    dayPanelTitleEl.textContent = dateStr;
+    lastDayItems = await res.json();
+    renderDayPanel();
+    dayPanel.hidden = false;
+  }
+
+  function renderDayPanel() {
+    const activeCategories = getActiveCategories();
+    const items = lastDayItems.filter((item) => activeCategories.has(item.category));
+
+    dayPanelTitleEl.textContent = currentDayStr;
     dayPanelListEl.innerHTML = "";
 
     if (items.length === 0) {
@@ -99,7 +126,6 @@
         dayPanelListEl.appendChild(row);
       }
     }
-    dayPanel.hidden = false;
   }
 
   function jumpToItem(item) {
@@ -121,7 +147,14 @@
       window.Diary.books.openItem(item.id);
     } else if (item.category === "music") {
       document.querySelector('.nav-btn[data-section="music"]').click();
-      window.Diary.music.openItem(item.id);
+      if (item.type === "live_cover") {
+        document.querySelector('.subnav-btn[data-sub="live-covers"]').click();
+        window.Diary["live-covers"].openItem(item.id);
+      } else {
+        // Album and track thoughts both live on the album's own detail page.
+        document.querySelector('.subnav-btn[data-sub="music"]').click();
+        window.Diary.music.openItem(item.id);
+      }
     } else if (item.category === "random") {
       document.querySelector('.nav-btn[data-section="journal"]').click();
       window.Diary.journal.openItem(item.id);
@@ -157,6 +190,13 @@
 
   dayPanelCloseBtn.addEventListener("click", () => {
     dayPanel.hidden = true;
+  });
+
+  categoryFilterEl.addEventListener("change", () => {
+    renderGrid();
+    if (currentDayStr && !dayPanel.hidden) {
+      renderDayPanel();
+    }
   });
 
   renderTodayWidget();

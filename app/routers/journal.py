@@ -22,6 +22,7 @@ def list_journal_entries():
                 title=metadata.get("title", ""),
                 date=metadata.get("date", ""),
                 body=content,
+                tags=metadata.get("tags", []),
             )
         )
     entries.sort(key=lambda e: e.date, reverse=True)
@@ -33,8 +34,8 @@ def create_journal_entry(entry: JournalEntryIn):
     year = entry.date[:4]
     base_slug = f"{entry.date}-{slugify(entry.title)}"
     path = unique_path(JOURNAL_DIR / year, base_slug)
-    write_entry(path, {"title": entry.title, "date": entry.date}, entry.body)
-    return JournalEntryOut(id=path.stem, title=entry.title, date=entry.date, body=entry.body)
+    write_entry(path, {"title": entry.title, "date": entry.date, "tags": entry.tags}, entry.body)
+    return JournalEntryOut(id=path.stem, title=entry.title, date=entry.date, body=entry.body, tags=entry.tags)
 
 
 @router.get("/{entry_id}", response_model=JournalEntryOut)
@@ -42,15 +43,19 @@ def get_journal_entry(entry_id: str):
     path = require_exists(_path_for_id(entry_id), "Journal entry not found")
     metadata, content = read_entry(path)
     return JournalEntryOut(
-        id=path.stem, title=metadata.get("title", ""), date=metadata.get("date", ""), body=content
+        id=path.stem,
+        title=metadata.get("title", ""),
+        date=metadata.get("date", ""),
+        body=content,
+        tags=metadata.get("tags", []),
     )
 
 
 @router.put("/{entry_id}", response_model=JournalEntryOut)
 def update_journal_entry(entry_id: str, entry: JournalEntryIn):
     path = require_exists(_path_for_id(entry_id), "Journal entry not found")
-    write_entry(path, {"title": entry.title, "date": entry.date}, entry.body)
-    return JournalEntryOut(id=path.stem, title=entry.title, date=entry.date, body=entry.body)
+    write_entry(path, {"title": entry.title, "date": entry.date, "tags": entry.tags}, entry.body)
+    return JournalEntryOut(id=path.stem, title=entry.title, date=entry.date, body=entry.body, tags=entry.tags)
 
 
 @router.delete("/{entry_id}")

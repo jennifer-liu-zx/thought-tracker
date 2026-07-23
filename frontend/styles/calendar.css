@@ -1,43 +1,66 @@
-/* Home page "today" widget + expandable month calendar. Kept plain/functional
-   on purpose — this is a good candidate for later visual-only redesign. */
+/* Home page: compact "today" card, sits beside the swimlanes. Clicking it
+   opens the full month calendar as a modal overlay. */
 
-.today-widget {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.1rem;
-  width: 110px;
-  padding: 1rem 0.5rem;
-  margin-bottom: 2rem;
-  border: 1px solid var(--color-border-input);
-  border-radius: var(--radius);
+.home-layout {
+  display: grid;
+  grid-template-columns: 1fr 160px;
+  gap: 2rem;
+  align-items: start;
+}
+
+.home-main {
+  min-width: 0; /* grid item's default min-width:auto would otherwise resist shrinking */
+}
+
+.home-calendar-panel {
+  position: sticky;
+  top: 1.5rem;
+  overflow: hidden; /* keeps the header bar's corners flush with the card's own radius */
   background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
   cursor: pointer;
 }
 
-.today-widget-day {
-  font-family: var(--font-serif);
-  font-size: 2.5rem;
-  line-height: 1;
-}
-
-.today-widget-month {
-  font-size: 0.8rem;
+.calendar-today-bar {
+  font-size: 0.7rem;
   letter-spacing: var(--letter-spacing-wide);
   text-transform: uppercase;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.calendar-today-day {
+  font-family: var(--font-serif);
+  font-size: 3rem;
+  line-height: 1;
+  text-align: center;
+  padding: 1.25rem 0 0.25rem;
+}
+
+.calendar-today-month {
+  font-size: 0.75rem;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  text-align: center;
   color: var(--color-text-faint);
+  padding-bottom: 1.25rem;
 }
 
 .calendar-modal {
   position: fixed;
   inset: 0;
   z-index: 100;
-  display: flex;
   background: rgba(0, 0, 0, 0.4);
 }
 
+/* Relative positioning context for the day-panel drawer below — the day
+   panel overlays on top instead of squeezing the grid via flexbox (which
+   was fighting the grid's intrinsic min-width and overlapping instead of
+   sharing space cleanly). */
 .calendar-modal-content {
-  flex: 1;
+  position: relative;
+  height: 100%;
   background: var(--color-bg-panel);
   padding: 2rem;
   overflow-y: auto;
@@ -70,6 +93,22 @@
 
 .calendar-modal-header .back-btn {
   margin-left: auto;
+}
+
+.calendar-category-filter {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.calendar-category-filter label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
 }
 
 .calendar-weekdays,
@@ -124,9 +163,15 @@
   line-height: 1.4;
 }
 
+/* A drawer that overlays the grid's right edge, rather than a flex sibling
+   squeezing it — the grid keeps its full comfortable width either way. */
 .calendar-day-panel {
-  width: 320px;
-  flex-shrink: 0;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 340px;
+  max-width: 100%;
   background: var(--color-bg-panel);
   border-left: 1px solid var(--color-border);
   padding: 1.5rem;

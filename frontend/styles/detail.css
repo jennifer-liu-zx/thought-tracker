@@ -69,9 +69,25 @@
 
 .detail-grid {
   display: grid;
-  grid-template-columns: 160px 1fr;
+  /* auto (not a bare 1fr) lets the column grow to fit a wider cover — e.g.
+     Live & Covers' 240px landscape preview — without it overlapping the
+     fields column next to it; 160px is still the floor for normal covers. */
+  grid-template-columns: minmax(160px, auto) 1fr;
   gap: 1.5rem;
   margin-bottom: 1.5rem;
+}
+
+/* Below this width the two columns no longer have room to breathe — stack
+   the cover above the fields instead of squeezing fields-col until its
+   text and padding get clipped off the visible viewport. */
+@media (max-width: 640px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cover-col {
+    align-items: center;
+  }
 }
 
 .cover-col {
@@ -113,6 +129,13 @@
   aspect-ratio: 1 / 1;
 }
 
+/* Live & Covers entries are typically video thumbnails (live performances,
+   covers) rather than album art, so landscape reads truer than portrait. */
+#live-cover-cover-preview {
+  width: 240px;
+  aspect-ratio: 16 / 9;
+}
+
 .cover-preview img {
   width: 100%;
   height: 100%;
@@ -137,6 +160,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+  min-width: 0; /* grid/flex items default to min-width:auto, refusing to shrink below content width */
 }
 
 .field-row {

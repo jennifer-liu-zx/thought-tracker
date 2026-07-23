@@ -17,6 +17,7 @@
   const coverEl = document.getElementById("live-cover-cover");
   const coverPreviewEl = document.getElementById("live-cover-cover-preview");
   const coverUploadEl = document.getElementById("live-cover-cover-upload");
+  const coverRemoveBtn = document.getElementById("live-cover-cover-remove-btn");
   const notesEl = document.getElementById("live-cover-notes");
   const thoughtsEl = document.getElementById("live-cover-thoughts");
   const newThoughtDateEl = document.getElementById("new-live-cover-thought-date");
@@ -35,6 +36,7 @@
     container: collectionEl,
     storageKey: "live-covers",
     onSelect: selectEntry,
+    coverAspect: "landscape",
     sortOptions: [
       { value: "title-asc", label: "Title (A–Z)", cmp: (a, b) => a.title.localeCompare(b.title) },
       { value: "title-desc", label: "Title (Z–A)", cmp: (a, b) => b.title.localeCompare(a.title) },
@@ -109,6 +111,12 @@
   });
 
   coverEl.addEventListener("input", updateCoverPreview);
+
+  coverRemoveBtn.addEventListener("click", () => {
+    coverEl.value = "";
+    coverUploadEl.value = "";
+    updateCoverPreview();
+  });
 
   coverUploadEl.addEventListener("change", () => {
     const file = coverUploadEl.files[0];
@@ -189,6 +197,7 @@
   });
 
   backBtn.addEventListener("click", () => {
+    if (isDirty() && !confirm("You have unsaved changes. Leave without saving?")) return;
     showBrowse();
     loadEntries();
   });
@@ -210,7 +219,10 @@
     };
   }
 
-  const { isDirty, markClean } = createDirtyTracker(buildPayload, { isVisible: () => !detailEl.hidden });
+  const { isDirty, markClean } = createDirtyTracker(buildPayload, {
+    isVisible: () => !detailEl.hidden,
+    indicatorEl: document.getElementById("live-cover-unsaved-indicator"),
+  });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();

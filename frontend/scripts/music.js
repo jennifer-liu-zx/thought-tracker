@@ -16,6 +16,7 @@
   const coverEl = document.getElementById("album-cover");
   const coverPreviewEl = document.getElementById("album-cover-preview");
   const coverUploadEl = document.getElementById("album-cover-upload");
+  const coverRemoveBtn = document.getElementById("album-cover-remove-btn");
   const notesEl = document.getElementById("album-notes");
   const thoughtsEl = document.getElementById("album-thoughts");
   const newThoughtDateEl = document.getElementById("new-album-thought-date");
@@ -133,6 +134,12 @@
   });
 
   coverEl.addEventListener("input", updateCoverPreview);
+
+  coverRemoveBtn.addEventListener("click", () => {
+    coverEl.value = "";
+    coverUploadEl.value = "";
+    updateCoverPreview();
+  });
 
   coverUploadEl.addEventListener("change", () => {
     const file = coverUploadEl.files[0];
@@ -426,6 +433,8 @@
       details.remove();
     });
 
+    enableSmoothDetails(details);
+
     return details;
   }
 
@@ -480,6 +489,7 @@
   });
 
   backBtn.addEventListener("click", () => {
+    if (isDirty() && !confirm("You have unsaved changes. Leave without saving?")) return;
     showBrowse();
     loadAlbums();
     favoritesPanel.refresh();
@@ -501,7 +511,10 @@
     };
   }
 
-  const { isDirty, markClean } = createDirtyTracker(buildPayload, { isVisible: () => !detailEl.hidden });
+  const { isDirty, markClean } = createDirtyTracker(buildPayload, {
+    isVisible: () => !detailEl.hidden,
+    indicatorEl: document.getElementById("album-unsaved-indicator"),
+  });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();

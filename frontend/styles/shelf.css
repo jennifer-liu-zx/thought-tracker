@@ -186,6 +186,11 @@
   aspect-ratio: 1 / 1;
 }
 
+/* Live & Covers entries are video thumbnails — landscape, not portrait */
+#live-covers-favorites .favorite-cover {
+  aspect-ratio: 16 / 9;
+}
+
 /* Shared collection browser: toolbar (search + view toggle) + 2 view modes */
 
 .collection-toolbar {
@@ -251,12 +256,20 @@
   left: 0;
   z-index: 5;
   min-width: 180px;
-  max-height: 240px;
-  overflow-y: auto;
-  padding: 0.5rem;
+  max-height: 280px;
+  display: flex;
+  flex-direction: column;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border-input);
   border-radius: var(--radius);
+}
+
+/* Search input stays pinned at the top; only the checkbox list below it
+   scrolls — otherwise typing would scroll the search box out of view on
+   a long tag list. */
+.tag-filter-options {
+  overflow-y: auto;
+  padding: 0.5rem;
 }
 
 .tag-filter-option {
@@ -363,6 +376,16 @@
 .cover-aspect-square .view-list .cover {
   width: 48px;
   height: 48px;
+}
+
+/* ---- Landscape covers (Live & Covers) — 16:9 video-thumbnail shape ---- */
+.cover-aspect-landscape .view-grid .cover {
+  aspect-ratio: 16 / 9;
+}
+
+.cover-aspect-landscape .view-list .cover {
+  width: 64px;
+  height: 36px;
 }
 
 /* ---- Shared item internals across both views ---- */

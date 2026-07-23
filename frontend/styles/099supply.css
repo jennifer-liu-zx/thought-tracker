@@ -67,6 +67,7 @@ main {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--sup-ink);
+  cursor: pointer;
 }
 
 .nav-btn {
@@ -138,6 +139,11 @@ main {
   color: var(--sup-ink);
 }
 
+/* Give the native dropdown caret some breathing room from the border. */
+.sort-select {
+  padding-right: 1.75rem;
+}
+
 /* Tag/sort controls are chrome, not committed content — kept muted like the
    date field below, rather than full ink. */
 .tag-filter-btn,
@@ -166,6 +172,28 @@ main {
 
 .tag-filter-option {
   color: var(--sup-muted);
+}
+
+.tag-filter-search {
+  font-size: 0.75rem;
+  border: none;
+  border-bottom: 1px solid var(--sup-border);
+  border-radius: 0;
+  background: var(--sup-white);
+  color: var(--sup-ink);
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+}
+
+.tag-filter-search:focus {
+  outline: none;
+  border-color: var(--sup-ink);
+}
+
+.tag-filter-empty {
+  color: var(--sup-muted-soft);
+  font-size: 0.7rem;
+  padding: 0.5rem 0.6rem;
 }
 
 .view-toggle button {
@@ -246,6 +274,13 @@ main {
   color: var(--sup-muted);
 }
 
+/* A lone <p> is still just one grid item, so it sits in the grid's first
+   cell (under where the first poster would be) rather than centered in
+   the whole results area — span every column so it can center properly. */
+.collection.view-grid .empty-msg {
+  grid-column: 1 / -1;
+}
+
 /* ---- Favourites sidebar ---- */
 .favorites-panel {
   background: var(--sup-white);
@@ -313,6 +348,21 @@ main {
   border: 1px solid var(--sup-border);
   border-radius: 9999px;
   color: var(--sup-muted);
+}
+
+.remove-cover-btn {
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  background: transparent;
+  border: none;
+  color: var(--sup-muted-soft);
+  text-decoration: underline;
+  padding: 0.2rem 0;
+  align-self: center;
+}
+
+.remove-cover-btn:hover {
+  color: var(--sup-ink);
 }
 
 .favorites-list {
@@ -398,6 +448,10 @@ main {
   border-radius: 0 !important;
   padding: 0.25rem 0 !important;
   background: transparent !important;
+  /* The big display size + underline read as "attached" to the field right
+     below at the standard .fields-col gap (0.6rem) — extra room here only,
+     not a global gap change. */
+  margin-bottom: 0.5rem !important;
 }
 
 .detail-pane input[type="text"],
@@ -411,10 +465,18 @@ main {
   color: var(--sup-ink);
 }
 
+/* Give the native dropdown caret some breathing room from the border —
+   the browser's default caret inset reads as cramped at 0.5rem padding. */
+.detail-pane select {
+  padding-right: 1.75rem;
+}
+
 /* Date fields are meant to be written over, like a placeholder — kept
-   muted rather than full ink, same treatment as the tag/sort selects. */
+   muted rather than full ink, same treatment as the tag/sort selects.
+   !important because `.detail-pane input[type="date"]` (two classes'
+   worth of specificity) would otherwise win over this and force ink. */
 input[type="date"] {
-  color: var(--sup-muted-soft);
+  color: var(--sup-muted-soft) !important;
 }
 
 .detail-pane textarea {
@@ -449,6 +511,17 @@ input[type="date"] {
 .checkbox-field {
   font-size: 0.8rem;
   color: var(--sup-ink);
+  margin-top: 0.4rem;
+}
+
+/* An empty tags/thoughts list still carries its 0.5rem margin-bottom even
+   with nothing inside it, so the heading-to-visible-content gap ends up
+   doubled (heading's own gap + this list's gap) compared to Notes, whose
+   heading sits directly against its textarea with no list in between.
+   Collapse the margin when there's nothing to separate from the add-row. */
+.chip-list:empty,
+.thoughts-list:empty {
+  margin-bottom: 0;
 }
 
 /* Section Heading — quiet, tracked-out curator's heading */
@@ -540,6 +613,15 @@ input[type="date"] {
   align-items: center;
 }
 
+/* A flex row with align-items:center fights a textarea's manual vertical
+   resize handle (most browsers snap it back to the row's centered height
+   after drag) — rows with a textarea (thoughts) need flex-start instead so
+   the resize handle actually works. Input/button heights are still pinned
+   via the explicit height below, so nothing else in the row looks off. */
+.add-row:has(textarea) {
+  align-items: flex-start;
+}
+
 .add-row input,
 .add-row button {
   height: 2.4rem;
@@ -593,7 +675,11 @@ button[type="submit"]:hover {
   background: var(--sup-muted-soft);
 }
 
-/* Ghost Button, stronger emphasis for Delete — Ink border, not Muted-Soft */
+/* Ghost Button, stronger emphasis for Delete — Ink border, not Muted-Soft.
+   !important on the radius: base.css's `.editor-actions button` (class+tag,
+   higher specificity than this single class) would otherwise force its
+   0px --radius token onto every Delete button, making it a rectangle next
+   to a pill-shaped Save. */
 .danger {
   font-size: 0.8rem;
   letter-spacing: 0.08em;
@@ -601,8 +687,14 @@ button[type="submit"]:hover {
   background: transparent !important;
   color: var(--sup-ink);
   border: 1px solid var(--sup-ink) !important;
-  border-radius: 9999px;
+  border-radius: 9999px !important;
   padding: 0.7rem 1.5rem;
+}
+
+/* Gap between the manual add-episode row and the season list below it —
+   the two need to read as separate groups, not one run-on block. */
+#episodes-list {
+  margin-top: 1.5rem;
 }
 
 /* ---- Episodes/tracks accordion (TV Shows, Music) ---- */
@@ -657,6 +749,8 @@ button[type="submit"]:hover {
   color: var(--sup-ink);
 }
 
+/* Same specificity fix as .danger above — this button also lives inside
+   an .editor-actions row. */
 .track-save-btn {
   font-size: 0.75rem;
   letter-spacing: 0.08em;
@@ -664,7 +758,7 @@ button[type="submit"]:hover {
   background: var(--sup-ink);
   color: var(--sup-white);
   border: none;
-  border-radius: 9999px;
+  border-radius: 9999px !important;
   padding: 0.6rem 1.25rem;
   transition: background 0.12s ease;
 }
@@ -688,22 +782,10 @@ button[type="submit"]:hover {
 }
 
 /* ---- Home page ---- */
-.today-widget {
+.home-calendar-panel {
   border: 1px solid var(--sup-border);
   border-radius: 8px;
   background: var(--sup-white);
-}
-
-.today-widget-day {
-  font-weight: 400;
-  font-size: 2.2rem;
-  color: var(--sup-ink);
-}
-
-.today-widget-month {
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  color: var(--sup-muted-soft);
 }
 
 .swimlane-title {
@@ -746,7 +828,36 @@ button[type="submit"]:hover {
   color: var(--sup-muted);
 }
 
-/* ---- Calendar modal ---- */
+/* ---- Home "today" card (compact, beside the swimlanes) ---- */
+.home-calendar-panel {
+  border: 1px solid var(--sup-border);
+  border-radius: 8px;
+  background: var(--sup-white);
+}
+
+/* The dark header strip is what reads as "a calendar" rather than a plain
+   number card — a nod to the torn-page desk-calendar header, in ink
+   instead of a color the rest of this monochrome system doesn't use. */
+.calendar-today-bar {
+  background: var(--sup-ink);
+  color: var(--sup-white);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+}
+
+.calendar-today-day {
+  font-weight: 400;
+  font-size: 2.4rem;
+  color: var(--sup-ink);
+}
+
+.calendar-today-month {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--sup-muted-soft);
+}
+
+/* ---- Calendar modal (opened by clicking the today card) ---- */
 .calendar-modal {
   background: rgba(16, 16, 16, 0.55);
 }
@@ -772,6 +883,13 @@ button[type="submit"]:hover {
 
 .calendar-modal-header button:not(.back-btn):hover {
   border-color: var(--sup-muted-soft);
+}
+
+.calendar-category-filter label {
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--sup-muted);
 }
 
 .calendar-weekdays {
@@ -839,6 +957,14 @@ button[type="submit"]:hover {
 .calendar-day-item-text {
   font-size: 0.78rem;
   color: var(--sup-muted);
+}
+
+/* ---- Journal (Random) filters ---- */
+.journal-date-range input[type="date"] {
+  font-size: 0.78rem;
+  border: 1px solid var(--sup-border);
+  border-radius: 4px;
+  background: var(--sup-white);
 }
 
 /* ---- Journal (Random) ---- */

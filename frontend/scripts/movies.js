@@ -18,6 +18,7 @@
   const coverEl = document.getElementById("movie-cover");
   const coverPreviewEl = document.getElementById("movie-cover-preview");
   const coverUploadEl = document.getElementById("movie-cover-upload");
+  const coverRemoveBtn = document.getElementById("movie-cover-remove-btn");
   const notesEl = document.getElementById("movie-notes");
   const watchDatesEl = document.getElementById("movie-watch-dates");
   const newWatchDateEl = document.getElementById("new-watch-date");
@@ -98,7 +99,8 @@
         cover: m.poster,
         year: m.year,
         rating: m.rating,
-        tags: [...(m.tags || []), ...(m.cast || []), ...(m.crew || [])],
+        tags: m.tags || [],
+        extraTags: [...(m.cast || []), ...(m.crew || [])], // hidden from the default tag list, but shows up once you search for a name
         keywords: [...(m.tags || []), ...(m.cast || []), ...(m.crew || []), m.title, m.english_title].join(" "),
       }))
     );
@@ -186,6 +188,12 @@
   });
 
   coverEl.addEventListener("input", updateCoverPreview);
+
+  coverRemoveBtn.addEventListener("click", () => {
+    coverEl.value = "";
+    coverUploadEl.value = "";
+    updateCoverPreview();
+  });
 
   coverUploadEl.addEventListener("change", () => {
     const file = coverUploadEl.files[0];
@@ -280,6 +288,7 @@
   });
 
   backBtn.addEventListener("click", () => {
+    if (isDirty() && !confirm("You have unsaved changes. Leave without saving?")) return;
     showBrowse();
     loadMovies();
   });
@@ -336,7 +345,10 @@
     };
   }
 
-  const { isDirty, markClean } = createDirtyTracker(buildPayload, { isVisible: () => !detailEl.hidden });
+  const { isDirty, markClean } = createDirtyTracker(buildPayload, {
+    isVisible: () => !detailEl.hidden,
+    indicatorEl: document.getElementById("movie-unsaved-indicator"),
+  });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();

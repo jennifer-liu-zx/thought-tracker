@@ -1,6 +1,6 @@
 import shutil
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Body, HTTPException
 
 from app.config import TV_DIR
 from app.external.tmdb import get_season_episodes, search_tv
@@ -153,3 +153,36 @@ def delete_episode(show_id: str, episode_id: str):
     path = require_exists(_episode_path(show_id, episode_id), "Episode not found")
     path.unlink()
     return {"ok": True}
+
+
+@router.put("/{show_id}/seasons/{season_number}/reorder", response_model=list[EpisodeOut])
+def reorder_episodes(show_id: str, season_number: int, episode_ids: list[str] = Body(...)):
+    require_exists(_show_path(show_id), "Show not found")
+    ep_dir = _episodes_dir(show_id)
+
+    # Read every episode's metadata up front, before any file is touched.
+    metadatas = []
+    for ep_id in episode_ids:
+        path = require_exists(_episode_path(show_id, ep_id), f"Episode {ep_id} not found")
+        metadata, _ = read_entry(path)
+        metadatas.append(metadata)
+
+    # Write to temp files first (renumbered), then delete the originals and
+    # rename the temp files into place — avoids clobbering when two episodes
+    # swap numbers (e.g. e01 <-> e02 would otherwise overwrite each other).
+    temp_paths = []
+    for i, metadata in enumerate(metadatas):
+        temp_path = ep_dir / f".reorder-tmp-{i}.md"
+        write_entry(temp_path, {**metadata, "season": season_number, "episode": i + 1}, "")
+        temp_paths.append(temp_path)
+
+    for ep_id in episode_ids:
+        _episode_path(show_id, ep_id).unlink()
+
+    result = []
+    for i, temp_path in enumerate(temp_paths):
+        final_path = _episode_path(show_id, f"s{season_number:02d}e{i + 1:02d}")
+        temp_path.rename(final_path)
+        ep_metadata, _ = read_entry(final_path)
+        result.append(_episode_to_out(final_path, ep_metadata))
+    return result

@@ -63,6 +63,12 @@ select:focus {
 
 body {
   margin: 0;
+  /* This app isn't designed to be fully responsive down to phone widths —
+     past this floor, stop reflowing (which was squeezing fields/text into
+     unreadable slivers) and just let the page scroll horizontally instead.
+     Matches detail.css's .detail-grid stacking breakpoint, so that one
+     still gets a chance to kick in before the hard floor takes over. */
+  min-width: 640px;
   font-family: var(--font-sans);
   background: var(--color-bg);
   color: var(--color-text);
@@ -156,6 +162,24 @@ main {
   gap: 0.75rem;
 }
 
+.journal-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.journal-date-range {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.journal-date-range input[type="date"] {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+
 .new-entry-btn {
   font-family: inherit;
   font-size: 0.85rem;
@@ -221,11 +245,15 @@ main {
 }
 
 #entry-title {
+  display: block;
+  width: 100%;
   font-family: var(--font-serif);
   font-size: var(--font-size-heading);
   border: none;
   border-bottom: 1px solid var(--color-border-input);
   padding: 0.4rem 0;
+  resize: none;
+  overflow: hidden; /* height is driven by the auto-grow script, not a scrollbar */
 }
 
 #entry-title:focus,

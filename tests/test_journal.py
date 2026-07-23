@@ -34,6 +34,20 @@ def test_get_update_delete_journal_entry(client):
     assert client.get("/api/journal").json() == []
 
 
+def test_tags_roundtrip(client):
+    created = client.post(
+        "/api/journal",
+        json={"title": "Tagged", "date": "2026-01-01", "body": "Hello", "tags": ["music", "travel"]},
+    ).json()
+    assert created["tags"] == ["music", "travel"]
+
+    fetched = client.get(f"/api/journal/{created['id']}").json()
+    assert fetched["tags"] == ["music", "travel"]
+
+    listed = client.get("/api/journal").json()
+    assert listed[0]["tags"] == ["music", "travel"]
+
+
 def test_get_nonexistent_entry_404s(client):
     res = client.get("/api/journal/does-not-exist")
     assert res.status_code == 404

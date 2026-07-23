@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Journal.</title>
+  <title>My Thoughts.</title>
   <link rel="stylesheet" href="/styles/base.css" />
   <link rel="stylesheet" href="/styles/shelf.css" />
   <link rel="stylesheet" href="/styles/detail.css" />
@@ -22,7 +22,7 @@
 </head>
 <body>
   <header class="topnav">
-    <h1 class="brand">My Journal.</h1>
+    <h1 class="brand" id="brand-home-link" role="button" tabindex="0">My Thoughts.</h1>
     <nav>
       <button class="nav-btn active" data-section="home">Home</button>
       <button class="nav-btn" data-section="movies">Movies &amp; TV</button>
@@ -34,22 +34,27 @@
 
   <main>
     <section id="section-home" class="section">
-      <button type="button" id="today-widget" class="today-widget">
-        <span class="today-widget-day" id="today-widget-day"></span>
-        <span class="today-widget-month" id="today-widget-month"></span>
-      </button>
+      <div class="home-layout">
+        <div class="home-main">
+          <div class="swimlane">
+            <h2 class="swimlane-title">Movies &amp; TV</h2>
+            <div id="home-movies-lane" class="shelf-lane"></div>
+          </div>
+          <div class="swimlane">
+            <h2 class="swimlane-title">Books</h2>
+            <div id="home-books-lane" class="shelf-lane"></div>
+          </div>
+          <div class="swimlane">
+            <h2 class="swimlane-title">Music</h2>
+            <div id="home-music-lane" class="shelf-lane"></div>
+          </div>
+        </div>
 
-      <div class="swimlane">
-        <h2 class="swimlane-title">Books</h2>
-        <div id="home-books-lane" class="shelf-lane"></div>
-      </div>
-      <div class="swimlane">
-        <h2 class="swimlane-title">Movies &amp; TV</h2>
-        <div id="home-movies-lane" class="shelf-lane"></div>
-      </div>
-      <div class="swimlane">
-        <h2 class="swimlane-title">Music</h2>
-        <div id="home-music-lane" class="shelf-lane"></div>
+        <aside class="home-calendar-panel" id="today-widget">
+          <div class="calendar-today-bar" id="today-weekday"></div>
+          <div class="calendar-today-day" id="today-widget-day"></div>
+          <div class="calendar-today-month" id="today-widget-month"></div>
+        </aside>
       </div>
     </section>
 
@@ -60,6 +65,12 @@
           <h2 id="calendar-month-title"></h2>
           <button type="button" id="calendar-next-month" aria-label="Next month">&rarr;</button>
           <button type="button" id="calendar-close-btn" class="back-btn">&times; Close</button>
+        </div>
+        <div id="calendar-category-filter" class="calendar-category-filter">
+          <label><input type="checkbox" value="movies_tv" checked /> Movie &amp; TV</label>
+          <label><input type="checkbox" value="books" checked /> Books</label>
+          <label><input type="checkbox" value="music" checked /> Music</label>
+          <label><input type="checkbox" value="random" checked /> Random</label>
         </div>
         <div class="calendar-weekdays">
           <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
@@ -113,6 +124,7 @@
                 <label class="upload-label">Upload poster
                   <input type="file" id="movie-cover-upload" accept="image/*" hidden />
                 </label>
+                <button type="button" id="movie-cover-remove-btn" class="remove-cover-btn">Remove poster</button>
               </div>
               <div class="fields-col">
                 <div class="field">
@@ -190,6 +202,7 @@
             <div class="editor-actions" style="margin-top: 1rem;">
               <button type="submit" id="movie-save-btn">Save</button>
               <button type="button" id="movie-delete-btn" class="danger" hidden>Delete</button>
+              <span id="movie-unsaved-indicator" class="unsaved-indicator" hidden>&#9679; Unsaved changes</span>
             </div>
           </form>
         </div>
@@ -225,6 +238,7 @@
                 <label class="upload-label">Upload poster
                   <input type="file" id="show-cover-upload" accept="image/*" hidden />
                 </label>
+                <button type="button" id="show-cover-remove-btn" class="remove-cover-btn">Remove poster</button>
               </div>
               <div class="fields-col">
                 <div class="field">
@@ -289,6 +303,7 @@
             <div class="editor-actions" style="margin-top: 1rem;">
               <button type="submit" id="show-save-btn">Save show</button>
               <button type="button" id="show-delete-btn" class="danger" hidden>Delete show</button>
+              <span id="show-unsaved-indicator" class="unsaved-indicator" hidden>&#9679; Unsaved changes</span>
             </div>
           </form>
 
@@ -302,7 +317,6 @@
             </div>
             <div id="manual-episode-row" class="add-row">
               <input type="number" id="manual-ep-season" placeholder="Season" min="1" style="width: 80px;" />
-              <input type="number" id="manual-ep-episode" placeholder="Episode" min="1" style="width: 80px;" />
               <input type="text" id="manual-ep-name" placeholder="Episode name" />
               <input type="date" id="manual-ep-airdate" />
               <button type="button" id="manual-ep-save-btn">+ Add episode</button>
@@ -347,6 +361,7 @@
               <label class="upload-label">Upload cover
                 <input type="file" id="book-cover-upload" accept="image/*" hidden />
               </label>
+              <button type="button" id="book-cover-remove-btn" class="remove-cover-btn">Remove cover</button>
             </div>
             <div class="fields-col">
               <div class="field">
@@ -456,6 +471,7 @@
           <div class="editor-actions" style="margin-top: 1rem;">
             <button type="submit" id="book-save-btn">Save</button>
             <button type="button" id="book-delete-btn" class="danger" hidden>Delete</button>
+            <span id="book-unsaved-indicator" class="unsaved-indicator" hidden>&#9679; Unsaved changes</span>
           </div>
         </form>
       </div>
@@ -495,6 +511,7 @@
               <label class="upload-label">Upload cover
                 <input type="file" id="album-cover-upload" accept="image/*" hidden />
               </label>
+              <button type="button" id="album-cover-remove-btn" class="remove-cover-btn">Remove cover</button>
             </div>
             <div class="fields-col">
               <div class="field">
@@ -555,6 +572,7 @@
           <div class="editor-actions" style="margin-top: 1rem;">
             <button type="submit" id="album-save-btn">Save album</button>
             <button type="button" id="album-delete-btn" class="danger" hidden>Delete album</button>
+            <span id="album-unsaved-indicator" class="unsaved-indicator" hidden>&#9679; Unsaved changes</span>
           </div>
         </form>
 
@@ -597,6 +615,7 @@
                 <label class="upload-label">Upload cover
                   <input type="file" id="live-cover-cover-upload" accept="image/*" hidden />
                 </label>
+                <button type="button" id="live-cover-cover-remove-btn" class="remove-cover-btn">Remove cover</button>
               </div>
               <div class="fields-col">
                 <div class="field">
@@ -655,6 +674,7 @@
             <div class="editor-actions" style="margin-top: 1rem;">
               <button type="submit" id="live-cover-save-btn">Save</button>
               <button type="button" id="live-cover-delete-btn" class="danger" hidden>Delete</button>
+              <span id="live-cover-unsaved-indicator" class="unsaved-indicator" hidden>&#9679; Unsaved changes</span>
             </div>
           </form>
         </div>
@@ -668,6 +688,20 @@
       <div class="journal-layout">
         <aside class="journal-list-pane">
           <button id="new-entry-btn" class="new-entry-btn">+ New Entry</button>
+          <div class="journal-filters">
+            <input type="search" id="journal-search-input" class="search-box" placeholder="Search titles..." />
+            <div class="journal-date-range">
+              <input type="date" id="journal-filter-date-from" title="From date" />
+              <input type="date" id="journal-filter-date-to" title="To date" />
+            </div>
+            <div class="tag-filter-wrap">
+              <button type="button" class="tag-filter-btn" id="journal-tag-filter-btn">All tags</button>
+              <div class="tag-filter-panel" id="journal-tag-filter-panel" hidden>
+                <input type="text" class="tag-filter-search" id="journal-tag-filter-search" placeholder="Search tags..." />
+                <div class="tag-filter-options" id="journal-tag-filter-options"></div>
+              </div>
+            </div>
+          </div>
           <ul id="journal-list" class="journal-list"></ul>
         </aside>
         <div class="journal-editor-pane">
@@ -679,11 +713,19 @@
             </div>
             <div class="field">
               <label for="entry-title">Title</label>
-              <input type="text" id="entry-title" placeholder="Title" required />
+              <textarea id="entry-title" placeholder="Title" rows="1" required></textarea>
             </div>
             <div class="field">
               <label for="entry-body">Entry</label>
               <textarea id="entry-body" placeholder="Write..." rows="18"></textarea>
+            </div>
+            <div class="tags-section">
+              <h3>Tags</h3>
+              <div id="entry-tags" class="chip-list"></div>
+              <div class="add-row">
+                <input type="text" id="new-entry-tag-text" placeholder="Add a tag..." />
+                <button type="button" id="add-entry-tag-btn">+ Add tag</button>
+              </div>
             </div>
             <div class="editor-actions">
               <button type="submit" id="save-btn">Save</button>

@@ -391,17 +391,30 @@ function createThoughtsEditor({ container, getThoughts, dateInput, textInput, ad
  * buildPayload(): () => object — the current form state.
  * isVisible (optional): () => bool — gates isDirty (e.g. only while the detail
  * view is shown, not the browse view); defaults to always true.
+ * indicatorEl (optional): an element (e.g. the "Unsaved changes" label) whose
+ * `hidden` is kept in sync with isDirty() via a lightweight poll — cheap
+ * enough given how many different actions (add tag, add thought, delete...)
+ * can mark the form dirty, and simpler than wiring every one of them by hand.
  */
-function createDirtyTracker(buildPayload, { isVisible } = {}) {
+function createDirtyTracker(buildPayload, { isVisible, indicatorEl } = {}) {
   let savedSnapshot = "";
-  return {
+  const tracker = {
     isDirty() {
       return (isVisible ? isVisible() : true) && JSON.stringify(buildPayload()) !== savedSnapshot;
     },
     markClean() {
       savedSnapshot = JSON.stringify(buildPayload());
+      if (indicatorEl) indicatorEl.hidden = true;
     },
   };
+
+  if (indicatorEl) {
+    setInterval(() => {
+      indicatorEl.hidden = !tracker.isDirty();
+    }, 400);
+  }
+
+  return tracker;
 }
 
 const DEFAULT_SORT_OPTIONS = [
@@ -413,19 +426,26 @@ const DEFAULT_SORT_OPTIONS = [
  * Renders a searchable, sortable, tag-filterable collection browser
  * (grid / list views) into `container`.
  *
- * items: [{ id, title, subtitle, cover, tags, keywords }]. `tags` drives the tag
- * filter dropdown; `keywords` is extra text (e.g. tags) folded into search matching
- * without necessarily being shown as the subtitle.
+ * items: [{ id, title, subtitle, cover, tags, extraTags, keywords }]. `tags` drives
+ * the tag filter dropdown's default (always-visible) list; `extraTags` (e.g. cast/crew
+ * names) stays out of that default list — too many to browse — but shows up as
+ * matching filter options once the user types in the tag-filter search box, and
+ * can still be selected to filter the collection like any other tag. `keywords` is
+ * extra text folded into the main search box's matching without being shown as
+ * the subtitle.
  *
  * onSelect(id) fires on item click. View/sort/filter choices persist per storageKey.
  * sortOptions (optional): [{ value, label, cmp(a, b) }] — defaults to title A-Z/Z-A.
- * coverAspect (optional): "portrait" (default, 2:3 — books/movies/shows) or "square" (albums).
+ * coverAspect (optional): "portrait" (default, 2:3 — books/movies/shows), "square" (albums),
+ * or "landscape" (16:9 — Live & Covers video thumbnails).
  */
 function createCollectionView({ container, storageKey, onSelect, sortOptions, coverAspect }) {
   const sorts = sortOptions && sortOptions.length ? sortOptions : DEFAULT_SORT_OPTIONS;
 
   if (coverAspect === "square") {
     container.classList.add("cover-aspect-square");
+  } else if (coverAspect === "landscape") {
+    container.classList.add("cover-aspect-landscape");
   }
 
   const validViews = ["grid", "list"];
@@ -437,6 +457,8 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
     view: validViews.includes(storedView) ? storedView : "grid",
     sort: localStorage.getItem(`sort:${storageKey}`) || sorts[0].value,
     tagFilters: [], // empty = no filter; otherwise match ANY selected tag
+    tagFilterQuery: "", // narrows the checkbox list itself, separate from the main search box
+    allTags: [],
   };
 
   function renderShell() {
@@ -450,7 +472,10 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
           <input type="search" class="search-box" placeholder="Search..." />
           <div class="tag-filter-wrap">
             <button type="button" class="tag-filter-btn">All tags</button>
-            <div class="tag-filter-panel" hidden></div>
+            <div class="tag-filter-panel" hidden>
+              <input type="text" class="tag-filter-search" placeholder="Search tags..." />
+              <div class="tag-filter-options"></div>
+            </div>
           </div>
           <select class="sort-select">${sortOptionsHtml}</select>
         </div>
@@ -481,7 +506,15 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
     tagFilterBtn.addEventListener("click", () => {
       const panel = container.querySelector(".tag-filter-panel");
       panel.hidden = !panel.hidden;
+      if (!panel.hidden) container.querySelector(".tag-filter-search").focus();
     });
+
+    const tagFilterSearch = container.querySelector(".tag-filter-search");
+    tagFilterSearch.addEventListener("input", (e) => {
+      state.tagFilterQuery = e.target.value;
+      renderTagFilterOptions();
+    });
+    tagFilterSearch.addEventListener("click", (e) => e.stopPropagation());
 
     container.querySelectorAll(".view-toggle button").forEach((btn) => {
       btn.classList.toggle("active", btn.dataset.view === state.view);
@@ -507,25 +540,46 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
   }
 
   function updateTagFilterOptions() {
-    const panel = container.querySelector(".tag-filter-panel");
-    if (!panel) return;
-    const uniqueTags = [...new Set(state.items.flatMap((it) => it.tags || []))].sort();
-    state.tagFilters = state.tagFilters.filter((t) => uniqueTags.includes(t));
+    state.allTags = [...new Set(state.items.flatMap((it) => it.tags || []))].sort();
+    state.allExtraTags = [...new Set(state.items.flatMap((it) => it.extraTags || []))].sort();
+    state.tagFilters = state.tagFilters.filter(
+      (t) => state.allTags.includes(t) || state.allExtraTags.includes(t)
+    );
+    renderTagFilterOptions();
+  }
 
-    panel.innerHTML = uniqueTags
-      .map(
-        (t) => `
-          <label class="tag-filter-option">
-            <input type="checkbox" value="${escapeHtml(t)}" ${state.tagFilters.includes(t) ? "checked" : ""} />
-            ${escapeHtml(t)}
-          </label>
-        `
-      )
-      .join("");
+  // Rebuilds just the checkbox list (not the search input above it), so
+  // typing in the tag-filter search box doesn't lose input focus.
+  function renderTagFilterOptions() {
+    const optionsEl = container.querySelector(".tag-filter-options");
+    if (!optionsEl) return;
+    const q = state.tagFilterQuery.trim().toLowerCase();
+    // extraTags (cast/crew) only ever surface once there's a query to narrow
+    // them — the unfiltered list would otherwise be swamped with names.
+    const visibleTags = q
+      ? [...state.allTags, ...state.allExtraTags].filter((t) => t.toLowerCase().includes(q))
+      : state.allTags;
 
-    panel.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+    optionsEl.innerHTML = visibleTags.length
+      ? visibleTags
+          .map(
+            (t) => `
+              <label class="tag-filter-option">
+                <input type="checkbox" value="${escapeHtml(t)}" ${state.tagFilters.includes(t) ? "checked" : ""} />
+                ${escapeHtml(t)}
+              </label>
+            `
+          )
+          .join("")
+      : `<p class="tag-filter-empty">No matching tags.</p>`;
+
+    optionsEl.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
       cb.addEventListener("change", () => {
-        state.tagFilters = [...panel.querySelectorAll('input[type="checkbox"]:checked')].map((c) => c.value);
+        const checkedHere = [...optionsEl.querySelectorAll('input[type="checkbox"]:checked')].map((c) => c.value);
+        // Preserve selections currently hidden by the search filter — only
+        // the visible set should be replaced by what's checked right now.
+        const keptHidden = state.tagFilters.filter((t) => !visibleTags.includes(t));
+        state.tagFilters = [...keptHidden, ...checkedHere];
         updateTagFilterButtonLabel();
         renderItems();
       });
@@ -547,7 +601,9 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
         );
 
     if (state.tagFilters.length > 0) {
-      filtered = filtered.filter((it) => (it.tags || []).some((t) => state.tagFilters.includes(t)));
+      filtered = filtered.filter((it) =>
+        [...(it.tags || []), ...(it.extraTags || [])].some((t) => state.tagFilters.includes(t))
+      );
     }
 
     const activeSort = sorts.find((s) => s.value === state.sort) || sorts[0];
@@ -583,6 +639,32 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
       renderItems();
     },
   };
+}
+
+/**
+ * Makes a single-row textarea grow to fit long title text instead of
+ * overflowing off-page — used where a title needs to wrap across lines
+ * (e.g. journal entry titles) rather than staying a fixed-width <input>.
+ * Enter is blocked since a title is conceptually one line; it should only
+ * wrap because of width, never because the user pressed Enter.
+ */
+function enableAutoGrowTextarea(textarea) {
+  function measure() {
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }
+  // Deferred a frame: callers often set .value right after un-hiding the
+  // pane it lives in, and measuring in that same tick can catch the box at
+  // a stale (e.g. still-collapsed) width, producing a wildly wrong height.
+  function resize() {
+    requestAnimationFrame(measure);
+  }
+  textarea.addEventListener("input", measure);
+  textarea.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") e.preventDefault();
+  });
+  resize();
+  return { resize };
 }
 
 /**
