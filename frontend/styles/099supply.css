@@ -1,0 +1,909 @@
+/* Site-wide theme, built from DESIGN/099Supply_DESIGN.md's "099 Supply"
+   system: a pure white gallery wall, one near-black ink doing every bit of
+   typographic and structural work, and an exclusively monospaced typeface
+   (Soehne Mono, substituted with JetBrains Mono). No chromatic color
+   anywhere, no shadows — depth comes entirely from 1px hairline borders.
+   A fixed, deliberate radius vocabulary: 8px cards, 0px badges, 4px
+   inputs, pill (9999px) buttons.
+
+   Applies globally — overrides base.css/shelf.css/detail.css/home.css/
+   calendar.css, all of which stay in place underneath as structural
+   (non-visual) layout.
+
+   Component mapping from DESIGN.md → this app:
+     Mockup Tile Card    -> poster/cover card (grid item), metadata strip
+                            below a hairline divider
+     Section Heading      -> "Movies & TV" / "Books" / etc. hero heading,
+                              Tags / dates / Thoughts / Notes headers
+     Primary Button         -> Add / Save actions (Ink fill, pill radius)
+     Ghost Button              -> Back to library (quiet) / Delete
+                                   (stronger border emphasis, still no
+                                   new color)
+     Metadata Label              -> field labels, tags, catalog strips  */
+
+:root {
+  --sup-white: #ffffff;
+  --sup-ink: #101010;
+  --sup-muted: #555555;
+  --sup-muted-soft: #999999;
+  --sup-border-soft: #c8c8c8;
+  --sup-border: #e0e0e0;
+  --sup-mono: "JetBrains Mono", monospace;
+}
+
+* {
+  box-shadow: none !important; /* depth comes from hairline borders only */
+  font-family: var(--sup-mono) !important;
+}
+
+html,
+body {
+  background: var(--sup-white);
+  color: var(--sup-ink);
+}
+
+/* Full-bleed white canvas — each .section owns its own padding instead of
+   a shared max-width container, so every section reads edge to edge. */
+main {
+  padding: 0;
+  max-width: none;
+  margin: 0;
+}
+
+.section {
+  padding: 2.5rem 2.5rem 4rem;
+}
+
+/* ---- Top nav ---- */
+.topnav {
+  background: var(--sup-white);
+  border-bottom: 1px solid var(--sup-border);
+  padding: 1.25rem 2.5rem;
+}
+
+.brand {
+  font-weight: 400;
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sup-ink);
+}
+
+.nav-btn {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sup-muted-soft);
+}
+
+.nav-btn.active {
+  color: var(--sup-ink);
+  border-bottom: 1px solid var(--sup-ink);
+}
+
+/* ---- Hero: a quiet, tracked-out display moment — not a poster headline ---- */
+.sup-hero {
+  padding: 1.5rem 0 2.5rem;
+  border-bottom: 1px solid var(--sup-border);
+  margin-bottom: 2rem;
+}
+
+.sup-hero h2 {
+  font-weight: 400;
+  font-size: clamp(2rem, 5vw, 3.375rem); /* scales toward the 54px display size */
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--sup-ink);
+  margin: 0;
+}
+
+/* ---- Subnav ---- */
+.subnav {
+  border-bottom: none;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.subnav-btn {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sup-muted-soft);
+  padding-bottom: 0.4rem;
+}
+
+.subnav-btn.active {
+  color: var(--sup-ink);
+  border-bottom: 1px solid var(--sup-ink);
+}
+
+/* ---- Toolbar: a Card surface ---- */
+.collection-toolbar {
+  background: var(--sup-white);
+  border: 1px solid var(--sup-border);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.search-box,
+.tag-filter-btn,
+.sort-select {
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--sup-border);
+  border-radius: 4px;
+  background: var(--sup-white);
+  color: var(--sup-ink);
+}
+
+/* Tag/sort controls are chrome, not committed content — kept muted like the
+   date field below, rather than full ink. */
+.tag-filter-btn,
+.sort-select {
+  color: var(--sup-muted-soft);
+}
+
+.search-box:hover,
+.tag-filter-btn:hover,
+.sort-select:hover {
+  border-color: var(--sup-muted-soft);
+}
+
+.search-box:focus,
+.tag-filter-btn:focus,
+.sort-select:focus {
+  outline: none;
+  border-color: var(--sup-ink);
+}
+
+.tag-filter-panel {
+  border: 1px solid var(--sup-border);
+  border-radius: 4px;
+  background: var(--sup-white);
+}
+
+.tag-filter-option {
+  color: var(--sup-muted);
+}
+
+.view-toggle button {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--sup-border);
+  border-radius: 9999px;
+  color: var(--sup-muted);
+  background: var(--sup-white);
+}
+
+.view-toggle button.active {
+  background: var(--sup-ink);
+  color: var(--sup-white);
+  border-color: var(--sup-ink);
+}
+
+/* Primary Button */
+.new-entry-btn {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--sup-ink);
+  color: var(--sup-white);
+  border: none;
+  border-radius: 9999px;
+  padding: 0.65rem 1.25rem;
+  transition: background 0.12s ease;
+}
+
+.new-entry-btn:hover {
+  background: var(--sup-muted-soft);
+}
+
+/* ---- Grid: Mockup Tile Card — image on white, metadata strip below a
+   hairline divider ---- */
+.collection.view-grid {
+  gap: 0.75rem;
+}
+
+.collection.view-grid .item {
+  background: var(--sup-white);
+  border: 1px solid var(--sup-border);
+  border-radius: 8px;
+  padding: 0.6rem 0.6rem 0.7rem;
+}
+
+.collection.view-grid .item-info {
+  border-top: 1px solid var(--sup-border);
+  padding-top: 0.6rem;
+  margin-top: 0.6rem;
+}
+
+.collection .cover,
+.collection.view-list .cover {
+  border-radius: 4px;
+}
+
+.collection.view-list .item {
+  border-bottom: 1px solid var(--sup-border);
+}
+
+.collection .item-title {
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--sup-ink);
+}
+
+.collection .item-subtitle {
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  color: var(--sup-muted);
+}
+
+.empty-msg {
+  color: var(--sup-muted);
+}
+
+/* ---- Favourites sidebar ---- */
+.favorites-panel {
+  background: var(--sup-white);
+  border: 1px solid var(--sup-border);
+  border-left: 1px solid var(--sup-border);
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.favorites-header h3 {
+  font-weight: 500;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sup-muted-soft);
+}
+
+.add-favorite-btn {
+  background: var(--sup-ink);
+  color: var(--sup-white);
+  border: none;
+  border-radius: 9999px;
+}
+
+.favorite-search-input {
+  font-size: 0.78rem;
+  border: 1px solid var(--sup-border);
+  border-radius: 4px;
+  background: var(--sup-white);
+  color: var(--sup-ink);
+}
+
+.favorite-search-input:focus {
+  outline: none;
+  border-color: var(--sup-ink);
+}
+
+.favorite-cover,
+.cover-preview {
+  border-radius: 4px;
+  border: 1px solid var(--sup-border);
+}
+
+/* Fixed-height rows via 2-line clamp keep "3 rows before scrolling" reliable
+   regardless of title length (same technique proven out in earlier passes). */
+.favorite-item .item-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  color: var(--sup-ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.2em;
+}
+
+.remove-favorite-btn {
+  background: transparent;
+  border: none;
+  color: var(--sup-ink);
+}
+
+.upload-label {
+  font-size: 0.78rem;
+  border: 1px solid var(--sup-border);
+  border-radius: 9999px;
+  color: var(--sup-muted);
+}
+
+.favorites-list {
+  max-height: 32rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sup-muted-soft) var(--sup-white);
+}
+
+.favorites-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.favorites-list::-webkit-scrollbar-track {
+  background: var(--sup-white);
+}
+
+.favorites-list::-webkit-scrollbar-thumb {
+  background: var(--sup-muted-soft);
+  border-radius: 9999px;
+}
+
+/* ---- Detail pane ---- */
+.detail-pane {
+  background: var(--sup-white);
+  border: 1px solid var(--sup-border);
+  border-radius: 8px;
+  padding: 2.25rem;
+}
+
+/* Ghost Button, quieter variant — muted-soft border for navigation */
+.back-btn {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sup-muted);
+  border: 1px solid var(--sup-muted-soft);
+  border-radius: 9999px;
+  padding: 0.5rem 1.1rem;
+  display: inline-block;
+}
+
+.cover-preview {
+  background: var(--sup-white);
+}
+
+/* External-search autofill (TMDb, Open Library) — same treatment as the
+   favourites search box */
+.search-panel input[type="search"] {
+  font-size: 0.78rem;
+  border: 1px solid var(--sup-border);
+  border-radius: 4px;
+  background: var(--sup-white);
+  color: var(--sup-ink);
+  width: 100%;
+}
+
+.search-panel input[type="search"]:hover {
+  border-color: var(--sup-muted-soft);
+}
+
+.search-panel input[type="search"]:focus {
+  outline: none;
+  border-color: var(--sup-ink);
+}
+
+/* Primary title field of every detail form (movie/show/book/album/track/
+   journal entry): the 54px display scale, plain Ink, uppercase — no
+   chunky/serif treatment, this system has exactly one typeface. */
+#movie-title,
+#show-title,
+#book-title,
+#album-title,
+#live-cover-title,
+#entry-title {
+  font-weight: 400 !important;
+  font-size: clamp(1.5rem, 4vw, 2.5rem) !important;
+  letter-spacing: 0.015em;
+  line-height: 1.1 !important;
+  text-transform: uppercase;
+  color: var(--sup-ink) !important;
+  border: none !important;
+  border-bottom: 1px solid var(--sup-ink) !important;
+  border-radius: 0 !important;
+  padding: 0.25rem 0 !important;
+  background: transparent !important;
+}
+
+.detail-pane input[type="text"],
+.detail-pane input[type="number"],
+.detail-pane input[type="date"],
+.detail-pane select {
+  font-size: 0.85rem;
+  border: 1px solid var(--sup-border);
+  border-radius: 4px;
+  background: var(--sup-white);
+  color: var(--sup-ink);
+}
+
+/* Date fields are meant to be written over, like a placeholder — kept
+   muted rather than full ink, same treatment as the tag/sort selects. */
+input[type="date"] {
+  color: var(--sup-muted-soft);
+}
+
+.detail-pane textarea {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  border: 1px solid var(--sup-border);
+  border-radius: 4px;
+  background: var(--sup-white);
+}
+
+.detail-pane input:hover,
+.detail-pane select:hover,
+.detail-pane textarea:hover {
+  border-color: var(--sup-muted-soft);
+}
+
+.detail-pane input:focus,
+.detail-pane select:focus,
+.detail-pane textarea:focus {
+  outline: none;
+  border-color: var(--sup-ink);
+}
+
+/* Metadata Label */
+.field label {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sup-muted);
+}
+
+.checkbox-field {
+  font-size: 0.8rem;
+  color: var(--sup-ink);
+}
+
+/* Section Heading — quiet, tracked-out curator's heading */
+.detail-pane h3 {
+  font-weight: 500;
+  font-size: 1.05rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sup-muted-soft);
+  border-bottom: 1px solid var(--sup-border);
+  padding-bottom: 0.5rem;
+}
+
+/* No chromatic color, even for ratings — filled uses Ink, unfilled Border */
+.star-front {
+  color: var(--sup-ink);
+}
+
+.star-back {
+  color: var(--sup-border-soft);
+}
+
+.star-clear-btn {
+  color: var(--sup-muted);
+}
+
+/* Metadata Label reused for tags — badges get 0px radius, unlike cards */
+.chip {
+  background: var(--sup-white);
+  border: 1px solid var(--sup-border);
+  border-radius: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sup-muted);
+}
+
+.thought-item {
+  background: var(--sup-white);
+  border: 1px solid var(--sup-border);
+  border-radius: 8px;
+}
+
+.thought-item .thought-date {
+  font-size: 0.85rem; /* at least as large as the date input it's paired with */
+  letter-spacing: 0.02em;
+  color: var(--sup-ink);
+}
+
+.thought-item .thought-text {
+  font-size: 0.85rem;
+  color: var(--sup-muted);
+}
+
+.thought-edit-btn,
+.thought-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  color: var(--sup-muted);
+}
+
+.thought-edit-btn:hover,
+.thought-delete-btn:hover {
+  color: var(--sup-ink);
+}
+
+.notes-edit-btn {
+  color: var(--sup-muted);
+}
+
+.notes-edit-btn:hover {
+  color: var(--sup-ink);
+}
+
+.notes-view-text {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--sup-muted);
+}
+
+/* Wider gap + matched height across every input/button on an add-row (tag,
+   date, thought, and the manual episode entry row) — native number/text/
+   date inputs and buttons don't share a height by default. */
+.add-row {
+  gap: 0.85rem;
+  align-items: center;
+}
+
+.add-row input,
+.add-row button {
+  height: 2.4rem;
+  box-sizing: border-box;
+}
+
+/* "Add" actions (tag / date / thought / episode / track) are Primary
+   Buttons — this app has several genuine add-actions, not one sparing
+   CTA, so the filled-ink treatment is used more broadly here than the
+   doc's single "used sparingly" button (see DESIGN.md adaptation note). */
+.add-row button {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--sup-ink);
+  color: var(--sup-white);
+  border: none;
+  border-radius: 9999px;
+  transition: background 0.12s ease;
+}
+
+.add-row button:hover {
+  background: var(--sup-muted-soft);
+}
+
+.thought-edit-actions button,
+.thoughts-toggle {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--sup-muted-soft);
+  border-radius: 9999px;
+  background: var(--sup-white);
+  color: var(--sup-muted);
+}
+
+/* Primary Button, reused for Save */
+button[type="submit"] {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--sup-ink);
+  color: var(--sup-white);
+  border: none;
+  border-radius: 9999px;
+  padding: 0.7rem 1.5rem;
+  transition: background 0.12s ease;
+}
+
+button[type="submit"]:hover {
+  background: var(--sup-muted-soft);
+}
+
+/* Ghost Button, stronger emphasis for Delete — Ink border, not Muted-Soft */
+.danger {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: transparent !important;
+  color: var(--sup-ink);
+  border: 1px solid var(--sup-ink) !important;
+  border-radius: 9999px;
+  padding: 0.7rem 1.5rem;
+}
+
+/* ---- Episodes/tracks accordion (TV Shows, Music) ---- */
+.season-group > summary {
+  background: var(--sup-white);
+  border: 1px solid var(--sup-border);
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--sup-ink);
+}
+
+.season-group .season-count {
+  color: var(--sup-muted);
+}
+
+.episode-item,
+.track-item {
+  border-bottom: 1px solid var(--sup-border);
+}
+
+.episode-item .ep-name,
+.track-item .ep-name {
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  color: var(--sup-ink);
+}
+
+.episode-item .ep-num,
+.episode-item .ep-air-date,
+.track-item .ep-num {
+  color: var(--sup-muted);
+}
+
+.drag-handle {
+  color: var(--sup-muted-soft);
+}
+
+.mini-section h4 {
+  font-weight: 500;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sup-muted-soft);
+}
+
+.track-title-display {
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  color: var(--sup-ink);
+}
+
+.track-save-btn {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--sup-ink);
+  color: var(--sup-white);
+  border: none;
+  border-radius: 9999px;
+  padding: 0.6rem 1.25rem;
+  transition: background 0.12s ease;
+}
+
+.track-save-btn:hover {
+  background: var(--sup-muted-soft);
+}
+
+/* delBtn is appended directly as a flex item of .episode-body (column
+   flex), so it stretches full-width by default like every other direct
+   child — pin it back to content width so it reads as a button, not a
+   bar. */
+.episode-body > .danger {
+  align-self: flex-start;
+}
+
+.hint-text {
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  color: var(--sup-muted-soft);
+}
+
+/* ---- Home page ---- */
+.today-widget {
+  border: 1px solid var(--sup-border);
+  border-radius: 8px;
+  background: var(--sup-white);
+}
+
+.today-widget-day {
+  font-weight: 400;
+  font-size: 2.2rem;
+  color: var(--sup-ink);
+}
+
+.today-widget-month {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--sup-muted-soft);
+}
+
+.swimlane-title {
+  font-weight: 500;
+  font-size: 1.05rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sup-muted-soft);
+  border-bottom: 1px solid var(--sup-border);
+  padding-bottom: 0.5rem;
+}
+
+/* Shadows are stripped globally (see the top-level `*` rule) — swap the
+   old lift-on-hover for a hairline border, so covers stay flat like
+   every other card in the system. */
+.shelf-item .cover {
+  border: 1px solid var(--sup-border);
+  border-radius: 4px;
+  transition: border-color 0.12s ease;
+}
+
+.shelf-item:hover .cover {
+  border-color: var(--sup-muted-soft);
+  transform: none;
+}
+
+.shelf-item .cover-placeholder {
+  color: var(--sup-muted-soft);
+}
+
+.shelf-item .item-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--sup-ink);
+}
+
+.shelf-item .item-subtitle {
+  font-size: 0.65rem;
+  color: var(--sup-muted);
+}
+
+/* ---- Calendar modal ---- */
+.calendar-modal {
+  background: rgba(16, 16, 16, 0.55);
+}
+
+.calendar-modal-content {
+  background: var(--sup-white);
+}
+
+.calendar-modal-header h2 {
+  font-weight: 400;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--sup-ink);
+}
+
+.calendar-modal-header button:not(.back-btn) {
+  border: 1px solid var(--sup-border);
+  border-radius: 9999px;
+  background: var(--sup-white);
+  color: var(--sup-ink);
+}
+
+.calendar-modal-header button:not(.back-btn):hover {
+  border-color: var(--sup-muted-soft);
+}
+
+.calendar-weekdays {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sup-muted-soft);
+}
+
+.calendar-cell {
+  border: 1px solid var(--sup-border);
+  border-radius: 4px;
+}
+
+.calendar-cell:hover {
+  border-color: var(--sup-muted-soft);
+  background: var(--sup-white);
+}
+
+.calendar-cell-today {
+  border-color: var(--sup-ink);
+  border-width: 1px;
+}
+
+.calendar-cell-day {
+  font-size: 0.85rem;
+  color: var(--sup-ink);
+}
+
+.calendar-cell-summary {
+  font-size: 0.65rem;
+  color: var(--sup-muted);
+}
+
+.calendar-day-panel {
+  background: var(--sup-white);
+  border-left: 1px solid var(--sup-border);
+}
+
+.calendar-day-panel h3 {
+  font-weight: 500;
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--sup-ink);
+}
+
+.calendar-day-item {
+  border: 1px solid var(--sup-border);
+  border-radius: 4px;
+  background: var(--sup-white);
+}
+
+.calendar-day-item-category {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  color: var(--sup-muted-soft);
+}
+
+.calendar-day-item-title {
+  font-size: 0.85rem;
+  color: var(--sup-ink);
+}
+
+.calendar-day-item-text {
+  font-size: 0.78rem;
+  color: var(--sup-muted);
+}
+
+/* ---- Journal (Random) ---- */
+.journal-list li {
+  border-left: 2px solid transparent;
+  border-radius: 0;
+}
+
+.journal-list li:hover,
+.journal-list li.selected {
+  background: var(--sup-white);
+  border-left-color: var(--sup-ink);
+}
+
+.journal-list .entry-date {
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  color: var(--sup-muted-soft);
+}
+
+.journal-list .entry-title {
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  color: var(--sup-ink);
+}
+
+.journal-editor-pane {
+  background: var(--sup-white);
+  border: 1px solid var(--sup-border);
+  border-radius: 8px;
+  padding: 2.25rem;
+  /* Grid items default to min-width:auto, so a monospaced textarea's
+     intrinsic (cols-based) width can force this track wider than
+     available space — min-width:0 lets it shrink to fit instead. */
+  min-width: 0;
+}
+
+#entry-date {
+  font-size: 0.85rem;
+  border: 1px solid var(--sup-border);
+  border-radius: 4px;
+  background: var(--sup-white);
+  color: var(--sup-muted-soft);
+}
+
+#entry-body {
+  width: 100%; /* monospace's wider avg char width inflates the textarea's
+                  default cols-based intrinsic size otherwise */
+  font-size: 0.9rem;
+  line-height: 1.6;
+  border: 1px solid var(--sup-border) !important;
+  border-radius: 4px;
+  background: var(--sup-white);
+  padding: 0.75rem;
+}
+
+#entry-date:focus,
+#entry-body:focus {
+  outline: none;
+  border-color: var(--sup-ink) !important;
+}
+
+.unsaved-indicator {
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--sup-muted);
+}
