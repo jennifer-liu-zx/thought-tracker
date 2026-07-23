@@ -23,6 +23,34 @@
     });
   }
 
+  // Music favourites are individual songs, not albums, so a favourited item
+  // lives at a nested endpoint (/api/music/{albumId}/tracks/{trackId})
+  // rather than the flat /api/music/{id} every other kind uses.
+  async function persistTrackOrder(item, index) {
+    const album = await fetch(`/api/music/${item.albumId}`).then((r) => r.json());
+    const track = album.tracks.find((t) => t.id === item.trackId);
+    if (!track) return;
+    track.favorite_order = index;
+    await fetch(`/api/music/${item.albumId}/tracks/${item.trackId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        track_number: track.track_number,
+        title: track.title,
+        english_title: track.english_title || "",
+        show_english_title: !!track.show_english_title,
+        link: track.link || "",
+        writers: track.writers || "",
+        producers: track.producers || "",
+        featuring: track.featuring || "",
+        label: track.label || "",
+        favorite: track.favorite,
+        favorite_order: track.favorite_order,
+        thoughts: track.thoughts,
+      }),
+    });
+  }
+
   async function persistOrder(orderedItems) {
     // Re-numbers every item in this lane and writes each one back — same
     // "full re-send" approach as track/episode drag-reorder, since these
@@ -31,14 +59,18 @@
     await Promise.all(
       orderedItems.map(async (item, index) => {
         if (item.favorite_order === index) return; // unchanged, skip the round-trip
-        const base = KIND_API[item.kind];
-        const full = await fetch(`${base}/${item.id}`).then((r) => r.json());
-        full.favorite_order = index;
-        await fetch(`${base}/${item.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(full),
-        });
+        if (item.kind === "music_track") {
+          await persistTrackOrder(item, index);
+        } else {
+          const base = KIND_API[item.kind];
+          const full = await fetch(`${base}/${item.id}`).then((r) => r.json());
+          full.favorite_order = index;
+          await fetch(`${base}/${item.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(full),
+          });
+        }
         item.favorite_order = index;
       })
     );
@@ -260,21 +292,26 @@
   }
 
   async function loadMusicLane() {
-    const res = await fetch("/api/music");
-    const albums = await res.json();
-    const favs = albums
-      .filter((a) => a.favorite)
-      .map((a) => ({
-        id: a.id,
-        title: pickDisplayTitle(a),
-        subtitle: a.artist,
-        cover: a.cover,
-        favorite_order: a.favorite_order,
-        kind: "music",
+    // Favourites here are individual songs (matching the Albums favourites
+    // panel), not whole albums — so this reads the flattened tracks
+    // endpoint rather than /api/music.
+    const res = await fetch("/api/music/tracks");
+    const tracks = await res.json();
+    const favs = tracks
+      .filter((t) => t.favorite)
+      .map((t) => ({
+        id: `${t.album_id}::${t.id}`,
+        title: pickDisplayTitle(t),
+        cover: t.album_cover,
+        favorite_order: t.favorite_order,
+        kind: "music_track",
+        albumId: t.album_id,
+        trackId: t.id,
       }));
     renderLane(musicLane, favs, (item) => {
       switchToSection("music");
-      window.Diary.music.openItem(item.id);
+      switchToSubsection("music");
+      window.Diary.music.openTrack(item.albumId, item.trackId);
     });
   }
 

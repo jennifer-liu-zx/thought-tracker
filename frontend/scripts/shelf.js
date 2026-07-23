@@ -462,10 +462,6 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
   };
 
   function renderShell() {
-    const sortOptionsHtml = sorts
-      .map((s) => `<option value="${escapeHtml(s.value)}">${escapeHtml(s.label)}</option>`)
-      .join("");
-
     container.innerHTML = `
       <div class="collection-toolbar">
         <div class="toolbar-left">
@@ -477,7 +473,7 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
               <div class="tag-filter-options"></div>
             </div>
           </div>
-          <select class="sort-select">${sortOptionsHtml}</select>
+          <div class="custom-select sort-select"></div>
         </div>
         <div class="view-toggle">
           <button type="button" data-view="grid">Grid</button>
@@ -494,12 +490,15 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
       renderItems();
     });
 
-    const sortSelect = container.querySelector(".sort-select");
-    sortSelect.value = state.sort;
-    sortSelect.addEventListener("change", (e) => {
-      state.sort = e.target.value;
-      localStorage.setItem(`sort:${storageKey}`, state.sort);
-      renderItems();
+    createCustomSelect({
+      container: container.querySelector(".sort-select"),
+      options: sorts,
+      value: state.sort,
+      onChange: (value) => {
+        state.sort = value;
+        localStorage.setItem(`sort:${storageKey}`, state.sort);
+        renderItems();
+      },
     });
 
     const tagFilterBtn = container.querySelector(".tag-filter-btn");
@@ -637,6 +636,62 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
       state.items = items;
       updateTagFilterOptions();
       renderItems();
+    },
+  };
+}
+
+/**
+ * A single-choice dropdown styled to match the site's own look, in place of
+ * a native <select> — browsers render an open <select>'s option list as
+ * OS-level chrome that CSS cannot restyle or reposition, so it always looks
+ * like a foreign control dropped onto the page. `options` is a list of
+ * {value, label}. Mimics the bit of <select>'s surface callers need
+ * (get/set value, change callback) since it isn't a real <select> element.
+ */
+function createCustomSelect({ container, options, value, onChange }) {
+  let current = value;
+
+  function labelFor(v) {
+    const opt = options.find((o) => o.value === v);
+    return opt ? opt.label : "";
+  }
+
+  function render() {
+    container.innerHTML = `
+      <button type="button" class="custom-select-btn">${escapeHtml(labelFor(current))}</button>
+      <div class="custom-select-panel" hidden>
+        ${options
+          .map(
+            (o) =>
+              `<div class="custom-select-option${o.value === current ? " active" : ""}" data-value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</div>`
+          )
+          .join("")}
+      </div>
+    `;
+
+    const btn = container.querySelector(".custom-select-btn");
+    const panel = container.querySelector(".custom-select-panel");
+
+    btn.addEventListener("click", () => {
+      panel.hidden = !panel.hidden;
+    });
+
+    panel.querySelectorAll(".custom-select-option").forEach((el) => {
+      el.addEventListener("click", () => {
+        current = el.dataset.value;
+        render();
+        onChange(current);
+      });
+    });
+  }
+
+  render();
+
+  return {
+    getValue: () => current,
+    setValue: (v) => {
+      current = v;
+      render();
     },
   };
 }

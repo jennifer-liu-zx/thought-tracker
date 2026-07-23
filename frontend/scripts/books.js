@@ -21,8 +21,28 @@
   const pagesEl = document.getElementById("book-pages");
   const genreEl = document.getElementById("book-genre");
   const seriesEl = document.getElementById("book-series");
-  const formatEl = document.getElementById("book-format");
-  const statusEl = document.getElementById("book-status");
+  const FORMAT_OPTIONS = [
+    { value: "physical", label: "Physical" },
+    { value: "ebook", label: "Ebook" },
+    { value: "audiobook", label: "Audiobook" },
+  ];
+  const formatSelect = createCustomSelect({
+    container: document.getElementById("book-format"),
+    options: FORMAT_OPTIONS,
+    value: "physical",
+    onChange: () => {},
+  });
+  const statusSelect = createCustomSelect({
+    container: document.getElementById("book-status"),
+    options: [
+      { value: "want_to_read", label: "Want to read" },
+      { value: "reading", label: "Reading" },
+      { value: "finished", label: "Finished" },
+      { value: "dnf", label: "DNF" },
+    ],
+    value: "want_to_read",
+    onChange: () => {},
+  });
   const coverEl = document.getElementById("book-cover");
   const coverPreviewEl = document.getElementById("book-cover-preview");
   const coverUploadEl = document.getElementById("book-cover-upload");
@@ -30,7 +50,12 @@
   const notesEl = document.getElementById("book-notes");
   const readDatesEl = document.getElementById("book-read-dates");
   const newReadDateEl = document.getElementById("new-read-date");
-  const newReadDateFormatEl = document.getElementById("new-read-date-format");
+  const readDateFormatSelect = createCustomSelect({
+    container: document.getElementById("new-read-date-format"),
+    options: FORMAT_OPTIONS,
+    value: "physical",
+    onChange: () => {},
+  });
   const addReadDateBtn = document.getElementById("add-read-date-btn");
   const thoughtsEl = document.getElementById("book-thoughts");
   const newThoughtDateEl = document.getElementById("new-thought-date");
@@ -143,7 +168,7 @@
 
   addReadDateBtn.addEventListener("click", () => {
     const date = newReadDateEl.value;
-    const format = newReadDateFormatEl.value;
+    const format = readDateFormatSelect.getValue();
     if (!date || readDates.some((entry) => entry.date === date && entry.format === format)) return;
     readDates.push({ date, format });
     readDates.sort((a, b) => a.date.localeCompare(b.date));
@@ -214,8 +239,8 @@
     pagesEl.value = "";
     genreEl.value = "";
     seriesEl.value = "";
-    formatEl.value = "physical";
-    statusEl.value = "want_to_read";
+    formatSelect.setValue("physical");
+    statusSelect.setValue("want_to_read");
     coverEl.value = "";
     notesEl.value = "";
     notesEditor.reset();
@@ -225,7 +250,7 @@
     rating = null;
     ratingWidget.setValue(null);
     favorite = false;
-    newReadDateFormatEl.value = "physical";
+    readDateFormatSelect.setValue("physical");
     newTagTextEl.value = "";
     renderReadDates();
     thoughtsEditor.render();
@@ -250,8 +275,8 @@
     pagesEl.value = book.pages || "";
     genreEl.value = book.genre || "";
     seriesEl.value = book.series || "";
-    formatEl.value = book.format || "physical";
-    statusEl.value = book.status || "want_to_read";
+    formatSelect.setValue(book.format || "physical");
+    statusSelect.setValue(book.status || "want_to_read");
     coverEl.value = book.cover || "";
     notesEl.value = book.notes || "";
     notesEditor.load();
@@ -336,8 +361,8 @@
       pages: pagesEl.value ? parseInt(pagesEl.value, 10) : null,
       genre: genreEl.value,
       series: seriesEl.value,
-      format: formatEl.value,
-      status: statusEl.value,
+      format: formatSelect.getValue(),
+      status: statusSelect.getValue(),
       cover: coverEl.value,
       notes: notesEl.value,
       tags: tags,

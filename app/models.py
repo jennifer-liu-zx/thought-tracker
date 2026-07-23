@@ -159,12 +159,24 @@ class TrackIn(BaseModel):
     producers: str = ""
     featuring: str = ""
     label: str = ""
+    favorite: bool = False
+    favorite_order: int | None = None  # manual drag-reorder position in the home page favourites lane
     thoughts: list[Thought] = []
 
 
 class TrackOut(TrackIn):
     id: str
     lyrics: str = ""
+
+
+class TrackWithAlbumOut(TrackOut):
+    """A track flattened with its parent album's context — used by the Albums
+    favourites panel, which favourites individual songs rather than albums."""
+
+    album_id: str
+    album_title: str
+    album_cover: str = ""
+    album_artist: str = ""
 
 
 class AlbumDetailOut(AlbumOut):

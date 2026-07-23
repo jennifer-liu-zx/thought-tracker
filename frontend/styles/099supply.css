@@ -130,7 +130,7 @@ main {
 
 .search-box,
 .tag-filter-btn,
-.sort-select {
+.sort-select .custom-select-btn {
   font-size: 0.8rem;
   letter-spacing: 0.02em;
   border: 1px solid var(--sup-border);
@@ -139,39 +139,46 @@ main {
   color: var(--sup-ink);
 }
 
-/* Give the native dropdown caret some breathing room from the border. */
-.sort-select {
-  padding-right: 1.75rem;
-}
-
 /* Tag/sort controls are chrome, not committed content — kept muted like the
    date field below, rather than full ink. */
 .tag-filter-btn,
-.sort-select {
+.sort-select .custom-select-btn {
   color: var(--sup-muted-soft);
 }
 
 .search-box:hover,
 .tag-filter-btn:hover,
-.sort-select:hover {
+.sort-select .custom-select-btn:hover {
   border-color: var(--sup-muted-soft);
 }
 
 .search-box:focus,
 .tag-filter-btn:focus,
-.sort-select:focus {
+.sort-select .custom-select-btn:focus {
   outline: none;
   border-color: var(--sup-ink);
 }
 
-.tag-filter-panel {
+.tag-filter-panel,
+.custom-select-panel {
   border: 1px solid var(--sup-border);
   border-radius: 4px;
   background: var(--sup-white);
 }
 
-.tag-filter-option {
+.tag-filter-option,
+.custom-select-option {
   color: var(--sup-muted);
+}
+
+.custom-select-option:hover {
+  background: var(--sup-border);
+  color: var(--sup-ink);
+}
+
+.custom-select-option.active {
+  color: var(--sup-ink);
+  font-weight: 400; /* this system never goes bold — ink color alone marks the active row */
 }
 
 .tag-filter-search {
@@ -457,18 +464,12 @@ main {
 .detail-pane input[type="text"],
 .detail-pane input[type="number"],
 .detail-pane input[type="date"],
-.detail-pane select {
+.detail-pane .custom-select-btn {
   font-size: 0.85rem;
   border: 1px solid var(--sup-border);
   border-radius: 4px;
   background: var(--sup-white);
   color: var(--sup-ink);
-}
-
-/* Give the native dropdown caret some breathing room from the border —
-   the browser's default caret inset reads as cramped at 0.5rem padding. */
-.detail-pane select {
-  padding-right: 1.75rem;
 }
 
 /* Date fields are meant to be written over, like a placeholder — kept
@@ -488,13 +489,13 @@ input[type="date"] {
 }
 
 .detail-pane input:hover,
-.detail-pane select:hover,
+.detail-pane .custom-select-btn:hover,
 .detail-pane textarea:hover {
   border-color: var(--sup-muted-soft);
 }
 
 .detail-pane input:focus,
-.detail-pane select:focus,
+.detail-pane .custom-select-btn:focus,
 .detail-pane textarea:focus {
   outline: none;
   border-color: var(--sup-ink);

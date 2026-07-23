@@ -3,7 +3,7 @@ import shutil
 from fastapi import APIRouter
 
 from app.config import MUSIC_DIR
-from app.models import AlbumDetailOut, AlbumIn, AlbumOut, LyricsIn, TrackIn, TrackOut
+from app.models import AlbumDetailOut, AlbumIn, AlbumOut, LyricsIn, TrackIn, TrackOut, TrackWithAlbumOut
 from app.storage import read_entry, require_exists, slugify, unique_dir, unique_path, write_entry
 
 router = APIRouter(prefix="/api/music", tags=["music"])
@@ -75,6 +75,35 @@ def create_album(album: AlbumIn):
     metadata = album.model_dump(exclude={"notes"})
     write_entry(_album_path(album_id), metadata, album.notes)
     return _album_to_out(album_id, metadata, album.notes)
+
+
+@router.get("/tracks", response_model=list[TrackWithAlbumOut])
+def list_all_tracks():
+    """Every track across every album, flattened with its parent album's
+    context — the Albums favourites panel favourites individual songs, not
+    albums, so it needs a cross-album view rather than one album at a time.
+    Registered before /{album_id} so "tracks" isn't swallowed as an album id.
+    """
+    results = []
+    if MUSIC_DIR.exists():
+        for album_dir in sorted(MUSIC_DIR.iterdir()):
+            album_path = album_dir / "album.md"
+            if not album_path.exists():
+                continue
+            album_meta, _ = read_entry(album_path)
+            for track_path in _list_track_files(album_dir.name):
+                track_meta, _ = read_entry(track_path)
+                track_out = _track_to_out(album_dir.name, track_path, track_meta)
+                results.append(
+                    TrackWithAlbumOut(
+                        **track_out.model_dump(),
+                        album_id=album_dir.name,
+                        album_title=album_meta.get("title", ""),
+                        album_cover=album_meta.get("cover", ""),
+                        album_artist=album_meta.get("artist", ""),
+                    )
+                )
+    return results
 
 
 @router.get("/{album_id}", response_model=AlbumDetailOut)

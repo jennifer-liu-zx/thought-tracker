@@ -412,21 +412,12 @@
               </div>
               <div class="field-row">
                 <div class="field">
-                  <label for="book-format">Format</label>
-                  <select id="book-format" title="Default format, prefilled when you add a new read date">
-                    <option value="physical">Physical</option>
-                    <option value="ebook">Ebook</option>
-                    <option value="audiobook">Audiobook</option>
-                  </select>
+                  <label>Format</label>
+                  <div class="custom-select" id="book-format" title="Default format, prefilled when you add a new read date"></div>
                 </div>
                 <div class="field">
-                  <label for="book-status">Status</label>
-                  <select id="book-status">
-                    <option value="want_to_read">Want to read</option>
-                    <option value="reading">Reading</option>
-                    <option value="finished">Finished</option>
-                    <option value="dnf">DNF</option>
-                  </select>
+                  <label>Status</label>
+                  <div class="custom-select" id="book-status"></div>
                 </div>
               </div>
             </div>
@@ -446,11 +437,7 @@
             <div id="book-read-dates" class="chip-list"></div>
             <div class="add-row">
               <input type="date" id="new-read-date" />
-              <select id="new-read-date-format">
-                <option value="physical">Physical</option>
-                <option value="ebook">Ebook</option>
-                <option value="audiobook">Audiobook</option>
-              </select>
+              <div class="custom-select" id="new-read-date-format"></div>
               <button type="button" id="add-read-date-btn">+ Add date</button>
             </div>
           </div>
@@ -536,12 +523,8 @@
                   <input type="text" id="album-year" placeholder="Year" />
                 </div>
                 <div class="field">
-                  <label for="album-release-type">Release type</label>
-                  <select id="album-release-type">
-                    <option value="album">Album</option>
-                    <option value="ep">EP</option>
-                    <option value="single">Single</option>
-                  </select>
+                  <label>Release type</label>
+                  <div class="custom-select" id="album-release-type"></div>
                 </div>
               </div>
             </div>

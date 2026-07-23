@@ -227,7 +227,7 @@
 }
 
 .tag-filter-btn,
-.sort-select {
+.custom-select-btn {
   font-family: inherit;
   font-size: 0.85rem;
   padding: 0.5rem 0.6rem;
@@ -236,21 +236,31 @@
   color: var(--color-text-muted);
   background: var(--color-bg-panel);
   cursor: pointer;
+  text-align: left;
 }
 
 .tag-filter-btn:focus,
-.sort-select:focus {
+.custom-select-btn:focus {
   outline: none;
   border-color: var(--color-accent);
 }
 
 /* Multi-select tag filter: a button that toggles a checkbox panel, so more
-   than one tag can be selected at once (match-any semantics). */
-.tag-filter-wrap {
+   than one tag can be selected at once (match-any semantics). Also the
+   positioning context for .custom-select, a single-choice dropdown styled
+   to match the site instead of a native <select> (whose open popup is
+   OS-rendered chrome no browser lets CSS touch). */
+.tag-filter-wrap,
+.custom-select {
   position: relative;
 }
 
-.tag-filter-panel {
+.custom-select-btn {
+  width: 100%;
+}
+
+.tag-filter-panel,
+.custom-select-panel {
   position: absolute;
   top: calc(100% + 0.25rem);
   left: 0;
@@ -262,6 +272,31 @@
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border-input);
   border-radius: var(--radius);
+}
+
+/* Matches the full width of its trigger button, rather than the
+   tag-filter-panel's intrinsic/min-width sizing — a form-field select's
+   options should line up with the field above it, not float narrower. */
+.custom-select-panel {
+  right: 0;
+  overflow-y: auto;
+}
+
+.custom-select-option {
+  padding: 0.5rem 0.6rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.custom-select-option:hover {
+  background: var(--color-bg-hover);
+}
+
+.custom-select-option.active {
+  color: var(--color-text);
+  font-weight: bold;
 }
 
 /* Search input stays pinned at the top; only the checkbox list below it

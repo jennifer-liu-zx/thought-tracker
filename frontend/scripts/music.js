@@ -12,7 +12,16 @@
   const showEnglishTitleEl = document.getElementById("album-show-english-title");
   const artistEl = document.getElementById("album-artist");
   const yearEl = document.getElementById("album-year");
-  const releaseTypeEl = document.getElementById("album-release-type");
+  const releaseTypeSelect = createCustomSelect({
+    container: document.getElementById("album-release-type"),
+    options: [
+      { value: "album", label: "Album" },
+      { value: "ep", label: "EP" },
+      { value: "single", label: "Single" },
+    ],
+    value: "album",
+    onChange: () => {},
+  });
   const coverEl = document.getElementById("album-cover");
   const coverPreviewEl = document.getElementById("album-cover-preview");
   const coverUploadEl = document.getElementById("album-cover-upload");
@@ -53,22 +62,65 @@
 
   const RELEASE_TYPE_LABELS = { ep: "EP", single: "Single", live: "Live" };
 
-  async function setAlbumFavorite(id, value) {
-    const full = await fetch(`/api/music/${id}`).then((r) => r.json());
-    full.favorite = value;
-    await fetch(`/api/music/${id}`, {
+  // The Albums favourites panel favourites individual songs, not whole
+  // albums — a composite "albumId::trackId" id carries both halves through
+  // createFavoritesPanel's generic {id} interface, split back apart here.
+  function packTrackId(albumId, trackId) {
+    return `${albumId}::${trackId}`;
+  }
+
+  function unpackTrackId(compositeId) {
+    const [albumId, trackId] = compositeId.split("::");
+    return { albumId, trackId };
+  }
+
+  async function setTrackFavorite(compositeId, value) {
+    const { albumId, trackId } = unpackTrackId(compositeId);
+    const album = await fetch(`/api/music/${albumId}`).then((r) => r.json());
+    const track = album.tracks.find((t) => t.id === trackId);
+    if (!track) return;
+    track.favorite = value;
+    await fetch(`/api/music/${albumId}/tracks/${trackId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(full),
+      body: JSON.stringify({
+        track_number: track.track_number,
+        title: track.title,
+        english_title: track.english_title || "",
+        show_english_title: !!track.show_english_title,
+        link: track.link || "",
+        writers: track.writers || "",
+        producers: track.producers || "",
+        featuring: track.featuring || "",
+        label: track.label || "",
+        favorite: track.favorite,
+        thoughts: track.thoughts,
+      }),
     });
+  }
+
+  async function openFavoriteTrack(compositeId) {
+    const { albumId, trackId } = unpackTrackId(compositeId);
+    await selectAlbum(albumId);
+    const trackEl = tracksListEl.querySelector(`[data-track-id="${CSS.escape(trackId)}"]`);
+    if (trackEl) {
+      trackEl.open = true;
+      trackEl.scrollIntoView({ block: "center" });
+    }
   }
 
   const favoritesPanel = createFavoritesPanel({
     container: document.getElementById("music-favorites"),
-    fetchAll: () => fetch("/api/music").then((r) => r.json()),
-    toItem: (a) => ({ id: a.id, title: pickDisplayTitle(a), subtitle: a.artist, cover: a.cover, favorite: a.favorite }),
-    setFavorite: setAlbumFavorite,
-    onOpen: (id) => selectAlbum(id),
+    fetchAll: () => fetch("/api/music/tracks").then((r) => r.json()),
+    toItem: (t) => ({
+      id: packTrackId(t.album_id, t.id),
+      title: pickDisplayTitle(t),
+      subtitle: t.album_artist,
+      cover: t.album_cover,
+      favorite: t.favorite,
+    }),
+    setFavorite: setTrackFavorite,
+    onOpen: openFavoriteTrack,
   });
 
   async function loadAlbums() {
@@ -169,7 +221,7 @@
     showEnglishTitleEl.checked = false;
     artistEl.value = "";
     yearEl.value = "";
-    releaseTypeEl.value = "album";
+    releaseTypeSelect.setValue("album");
     coverEl.value = "";
     notesEl.value = "";
     notesEditor.reset();
@@ -228,6 +280,7 @@
   function buildTrackElement(albumId, track) {
     const details = document.createElement("details");
     details.className = "track-item";
+    details.dataset.trackId = track.id;
 
     const summary = document.createElement("summary");
     summary.innerHTML = `<span class="drag-handle" draggable="true" title="Drag to reorder">⠿</span><span class="ep-num">${String(track.track_number).padStart(2, "0")}</span><span class="ep-name">${escapeHtml(pickDisplayTitle(track)) || "(untitled)"}</span>`;
@@ -458,7 +511,7 @@
     showEnglishTitleEl.checked = !!album.show_english_title;
     artistEl.value = album.artist || "";
     yearEl.value = album.year || "";
-    releaseTypeEl.value = album.release_type || "album";
+    releaseTypeSelect.setValue(album.release_type || "album");
     coverEl.value = album.cover || "";
     notesEl.value = album.notes || "";
     notesEditor.load();
@@ -502,7 +555,7 @@
       show_english_title: showEnglishTitleEl.checked,
       artist: artistEl.value,
       year: yearEl.value,
-      release_type: releaseTypeEl.value,
+      release_type: releaseTypeSelect.getValue(),
       cover: coverEl.value,
       notes: notesEl.value,
       tags: tags,
@@ -567,6 +620,7 @@
       favoritesPanel.refresh();
     },
     openItem: (id) => selectAlbum(id),
+    openTrack: (albumId, trackId) => openFavoriteTrack(packTrackId(albumId, trackId)),
     isDirty: () => isDirty(),
   };
 

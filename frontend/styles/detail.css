@@ -211,7 +211,7 @@
 .detail-pane input[type="text"],
 .detail-pane input[type="number"],
 .detail-pane input[type="date"],
-.detail-pane select,
+.detail-pane .custom-select-btn,
 .detail-pane textarea {
   font-family: inherit;
   font-size: 0.9rem;
@@ -222,7 +222,7 @@
 }
 
 .detail-pane input:focus,
-.detail-pane select:focus,
+.detail-pane .custom-select-btn:focus,
 .detail-pane textarea:focus {
   outline: none;
   border-color: var(--color-accent);
