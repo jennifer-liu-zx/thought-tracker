@@ -26,6 +26,12 @@
   const tagsEl = document.getElementById("show-tags");
   const newTagTextEl = document.getElementById("new-show-tag-text");
   const addTagBtn = document.getElementById("add-show-tag-btn");
+  const castEl = document.getElementById("show-cast");
+  const newCastTextEl = document.getElementById("new-show-cast-text");
+  const addCastBtn = document.getElementById("add-show-cast-btn");
+  const crewEl = document.getElementById("show-crew");
+  const newCrewTextEl = document.getElementById("new-show-crew-text");
+  const addCrewBtn = document.getElementById("add-show-crew-btn");
   const deleteBtn = document.getElementById("show-delete-btn");
 
   const episodesPanel = document.getElementById("episodes-panel");
@@ -40,6 +46,8 @@
 
   let thoughts = [];
   let tags = [];
+  let cast = [];
+  let crew = [];
   let favorite = false;
   let searchDebounce = null;
   let tmdbId = null;
@@ -84,8 +92,8 @@
         subtitle: `${s.year || ""}${s.year ? " · " : ""}${s.episode_count} episode${s.episode_count === 1 ? "" : "s"}`,
         cover: s.poster,
         year: s.year,
-        tags: s.tags || [],
-        keywords: [...(s.tags || []), s.title, s.english_title].join(" "),
+        tags: [...(s.tags || []), ...(s.cast || []), ...(s.crew || [])],
+        keywords: [...(s.tags || []), ...(s.cast || []), ...(s.crew || []), s.title, s.english_title].join(" "),
       }))
     );
   }
@@ -103,6 +111,12 @@
     textInput: newThoughtTextEl,
     addBtn: addThoughtBtn,
   });
+
+  const notesViewEl = document.createElement("div");
+  notesViewEl.className = "notes-view";
+  notesViewEl.hidden = true;
+  notesEl.insertAdjacentElement("afterend", notesViewEl);
+  const notesEditor = createNotesEditor({ container: notesViewEl, textarea: notesEl });
 
   function renderTags() {
     tagsEl.innerHTML = "";
@@ -124,6 +138,20 @@
     tags.push(tag);
     newTagTextEl.value = "";
     renderTags();
+  });
+
+  const castEditor = createChipListEditor({
+    container: castEl,
+    getItems: () => cast,
+    textInput: newCastTextEl,
+    addBtn: addCastBtn,
+  });
+
+  const crewEditor = createChipListEditor({
+    container: crewEl,
+    getItems: () => crew,
+    textInput: newCrewTextEl,
+    addBtn: addCrewBtn,
   });
 
   coverEl.addEventListener("input", updateCoverPreview);
@@ -157,12 +185,17 @@
     yearEl.value = "";
     coverEl.value = "";
     notesEl.value = "";
+    notesEditor.reset();
     tmdbId = null;
     thoughts = [];
     tags = [];
+    cast = [];
+    crew = [];
     favorite = false;
     thoughtsEditor.render();
     renderTags();
+    castEditor.render();
+    crewEditor.render();
     updateCoverPreview();
     deleteBtn.hidden = true;
     searchPanel.hidden = false;
@@ -267,6 +300,7 @@
     });
 
     renderWatchDates();
+    enableSmoothDetails(details);
 
     return details;
   }
@@ -298,6 +332,7 @@
       }
       seasonDetails.appendChild(container);
       episodesListEl.appendChild(seasonDetails);
+      enableSmoothDetails(seasonDetails);
     }
   }
 
@@ -309,12 +344,17 @@
     yearEl.value = show.year || "";
     coverEl.value = show.poster || "";
     notesEl.value = show.notes || "";
+    notesEditor.load();
     tmdbId = show.tmdb_id || null;
     thoughts = [...(show.thoughts || [])];
     tags = [...(show.tags || [])];
+    cast = [...(show.cast || [])];
+    crew = [...(show.crew || [])];
     favorite = !!show.favorite;
     thoughtsEditor.render();
     renderTags();
+    castEditor.render();
+    crewEditor.render();
     updateCoverPreview();
     markClean();
   }
@@ -387,6 +427,8 @@
       tmdb_id: tmdbId,
       notes: notesEl.value,
       tags: tags,
+      cast: cast,
+      crew: crew,
       favorite: favorite,
       thoughts: thoughts,
     };

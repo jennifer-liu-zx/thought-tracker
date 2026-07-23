@@ -19,13 +19,19 @@ def test_watch_dates_and_thoughts_roundtrip(client):
         f"/api/movies/{movie['id']}",
         json={
             "title": "Dune",
-            "watch_dates": ["2026-01-10", "2026-01-11"],
+            "watch_dates": [
+                {"date": "2026-01-10", "cinema": True},
+                {"date": "2026-01-11", "cinema": False},
+            ],
             "thoughts": [{"date": "2026-01-11", "text": "Great sound design."}],
         },
     )
 
     body = res.json()
-    assert body["watch_dates"] == ["2026-01-10", "2026-01-11"]
+    assert body["watch_dates"] == [
+        {"date": "2026-01-10", "cinema": True},
+        {"date": "2026-01-11", "cinema": False},
+    ]
     assert body["thoughts"] == [{"date": "2026-01-11", "text": "Great sound design."}]
 
 

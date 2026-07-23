@@ -5,6 +5,7 @@ import app.config as config
 import app.routers.books as books_router
 import app.routers.calendar as calendar_router
 import app.routers.journal as journal_router
+import app.routers.live_covers as live_covers_router
 import app.routers.movies as movies_router
 import app.routers.music as music_router
 import app.routers.tv as tv_router
@@ -20,6 +21,7 @@ def client(tmp_path, monkeypatch):
         "MOVIES_DIR": tmp_path / "movies",
         "TV_DIR": tmp_path / "tv",
         "MUSIC_DIR": tmp_path / "music",
+        "LIVE_COVERS_DIR": tmp_path / "live_covers",
     }
     for name, path in dirs.items():
         monkeypatch.setattr(config, name, path)
@@ -31,6 +33,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setattr(movies_router, "MOVIES_DIR", dirs["MOVIES_DIR"])
     monkeypatch.setattr(tv_router, "TV_DIR", dirs["TV_DIR"])
     monkeypatch.setattr(music_router, "MUSIC_DIR", dirs["MUSIC_DIR"])
+    monkeypatch.setattr(live_covers_router, "LIVE_COVERS_DIR", dirs["LIVE_COVERS_DIR"])
     monkeypatch.setattr(calendar_router, "JOURNAL_DIR", dirs["JOURNAL_DIR"])
     monkeypatch.setattr(calendar_router, "BOOKS_DIR", dirs["BOOKS_DIR"])
     monkeypatch.setattr(calendar_router, "MOVIES_DIR", dirs["MOVIES_DIR"])

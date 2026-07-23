@@ -9,6 +9,15 @@
   <link rel="stylesheet" href="/styles/detail.css" />
   <link rel="stylesheet" href="/styles/home.css" />
   <link rel="stylesheet" href="/styles/calendar.css" />
+  <!-- Movies & TV redesign, built from DESIGN/099Supply_DESIGN.md — scoped
+       entirely to #section-movies -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/styles/movies-099supply.css" />
 </head>
 <body>
   <header class="topnav">
@@ -64,6 +73,9 @@
     </div>
 
     <section id="section-movies" class="section" hidden>
+      <div class="sup-hero">
+        <h2>Movies &amp; TV</h2>
+      </div>
       <div class="subnav">
         <button type="button" class="subnav-btn active" data-sub="movies">Movies</button>
         <button type="button" class="subnav-btn" data-sub="tv">TV Shows</button>
@@ -96,7 +108,7 @@
               <div class="cover-col">
                 <div class="cover-preview" id="movie-cover-preview">no poster</div>
                 <div id="movie-rating" class="star-rating"></div>
-                <input type="text" id="movie-cover" placeholder="Poster image URL" />
+                <input type="text" id="movie-cover" placeholder="Poster image URL" hidden />
                 <label class="upload-label">Upload poster
                   <input type="file" id="movie-cover-upload" accept="image/*" hidden />
                 </label>
@@ -107,12 +119,12 @@
                   <input type="text" id="movie-title" placeholder="Title" required />
                 </div>
                 <div class="field">
-                  <label for="movie-english-title">English title</label>
-                  <input type="text" id="movie-english-title" placeholder="English title (optional)" />
+                  <label for="movie-english-title">Alternative title</label>
+                  <input type="text" id="movie-english-title" placeholder="Alternative title (optional)" />
                 </div>
                 <label class="checkbox-field">
                   <input type="checkbox" id="movie-show-english-title" />
-                  Show English title
+                  Show alternative title
                 </label>
                 <div class="field">
                   <label for="movie-year">Year</label>
@@ -130,11 +142,33 @@
               </div>
             </div>
 
+            <div class="tags-section">
+              <h3>Cast</h3>
+              <div id="movie-cast" class="chip-list"></div>
+              <div class="add-row">
+                <input type="text" id="new-movie-cast-text" placeholder="Add a cast member..." />
+                <button type="button" id="add-movie-cast-btn">+ Add cast</button>
+              </div>
+            </div>
+
+            <div class="tags-section">
+              <h3>Crew</h3>
+              <div id="movie-crew" class="chip-list"></div>
+              <div class="add-row">
+                <input type="text" id="new-movie-crew-text" placeholder="Add a crew member..." />
+                <button type="button" id="add-movie-crew-btn">+ Add crew</button>
+              </div>
+            </div>
+
             <div class="dates-section">
               <h3>Watch dates</h3>
               <div id="movie-watch-dates" class="chip-list"></div>
               <div class="add-row">
                 <input type="date" id="new-watch-date" />
+                <label class="checkbox-field">
+                  <input type="checkbox" id="new-watch-date-cinema" />
+                  In cinema
+                </label>
                 <button type="button" id="add-watch-date-btn">+ Add date</button>
               </div>
             </div>
@@ -186,7 +220,7 @@
             <div class="detail-grid">
               <div class="cover-col">
                 <div class="cover-preview" id="show-cover-preview">no poster</div>
-                <input type="text" id="show-cover" placeholder="Poster image URL" />
+                <input type="text" id="show-cover" placeholder="Poster image URL" hidden />
                 <label class="upload-label">Upload poster
                   <input type="file" id="show-cover-upload" accept="image/*" hidden />
                 </label>
@@ -197,12 +231,12 @@
                   <input type="text" id="show-title" placeholder="Title" required />
                 </div>
                 <div class="field">
-                  <label for="show-english-title">English title</label>
-                  <input type="text" id="show-english-title" placeholder="English title (optional)" />
+                  <label for="show-english-title">Alternative title</label>
+                  <input type="text" id="show-english-title" placeholder="Alternative title (optional)" />
                 </div>
                 <label class="checkbox-field">
                   <input type="checkbox" id="show-show-english-title" />
-                  Show English title
+                  Show alternative title
                 </label>
                 <div class="field">
                   <label for="show-year">Year</label>
@@ -217,6 +251,24 @@
               <div class="add-row">
                 <input type="text" id="new-show-tag-text" placeholder="Add a tag..." />
                 <button type="button" id="add-show-tag-btn">+ Add tag</button>
+              </div>
+            </div>
+
+            <div class="tags-section">
+              <h3>Cast</h3>
+              <div id="show-cast" class="chip-list"></div>
+              <div class="add-row">
+                <input type="text" id="new-show-cast-text" placeholder="Add a cast member..." />
+                <button type="button" id="add-show-cast-btn">+ Add cast</button>
+              </div>
+            </div>
+
+            <div class="tags-section">
+              <h3>Crew</h3>
+              <div id="show-crew" class="chip-list"></div>
+              <div class="add-row">
+                <input type="text" id="new-show-crew-text" placeholder="Add a crew member..." />
+                <button type="button" id="add-show-crew-btn">+ Add crew</button>
               </div>
             </div>
 
@@ -287,7 +339,7 @@
             <div class="cover-col">
               <div class="cover-preview" id="book-cover-preview">no cover</div>
               <div id="book-rating" class="star-rating"></div>
-              <input type="text" id="book-cover" placeholder="Cover image URL" />
+              <input type="text" id="book-cover" placeholder="Cover image URL" hidden />
               <label class="upload-label">Upload cover
                 <input type="file" id="book-cover-upload" accept="image/*" hidden />
               </label>
@@ -298,12 +350,12 @@
                 <input type="text" id="book-title" placeholder="Title" required />
               </div>
               <div class="field">
-                <label for="book-english-title">English title</label>
-                <input type="text" id="book-english-title" placeholder="English title (optional)" />
+                <label for="book-english-title">Alternative title</label>
+                <input type="text" id="book-english-title" placeholder="Alternative title (optional)" />
               </div>
               <label class="checkbox-field">
                 <input type="checkbox" id="book-show-english-title" />
-                Show English title
+                Show alternative title
               </label>
               <div class="field">
                 <label for="book-author">Author</label>
@@ -406,6 +458,12 @@
     </section>
 
     <section id="section-music" class="section" hidden>
+      <div class="subnav">
+        <button type="button" class="subnav-btn active" data-sub="music">Albums</button>
+        <button type="button" class="subnav-btn" data-sub="live-covers">Live &amp; Covers</button>
+      </div>
+
+      <div id="sub-music" class="subsection">
       <div id="music-browse">
         <div class="browse-layout">
           <div class="browse-main">
@@ -426,7 +484,7 @@
           <div class="detail-grid">
             <div class="cover-col">
               <div class="cover-preview" id="album-cover-preview">no cover</div>
-              <input type="text" id="album-cover" placeholder="Cover image URL" />
+              <input type="text" id="album-cover" placeholder="Cover image URL" hidden />
               <label class="upload-label">Upload cover
                 <input type="file" id="album-cover-upload" accept="image/*" hidden />
               </label>
@@ -437,12 +495,12 @@
                 <input type="text" id="album-title" placeholder="Album title" required />
               </div>
               <div class="field">
-                <label for="album-english-title">English title</label>
-                <input type="text" id="album-english-title" placeholder="English title (optional)" />
+                <label for="album-english-title">Alternative title</label>
+                <input type="text" id="album-english-title" placeholder="Alternative title (optional)" />
               </div>
               <label class="checkbox-field">
                 <input type="checkbox" id="album-show-english-title" />
-                Show English title
+                Show alternative title
               </label>
               <div class="field">
                 <label for="album-artist">Artist</label>
@@ -459,7 +517,6 @@
                     <option value="album">Album</option>
                     <option value="ep">EP</option>
                     <option value="single">Single</option>
-                    <option value="live">Live</option>
                   </select>
                 </div>
               </div>
@@ -506,6 +563,95 @@
           <div id="tracks-list" class="tracks-list"></div>
         </div>
       </div>
+      </div>
+
+      <div id="sub-live-covers" class="subsection" hidden>
+        <div id="live-covers-browse">
+          <div class="browse-layout">
+            <div class="browse-main">
+              <div class="browse-actions">
+                <button type="button" id="add-live-cover-btn" class="new-entry-btn">+ Add Track</button>
+              </div>
+              <div id="live-covers-collection"></div>
+            </div>
+            <aside id="live-covers-favorites" class="favorites-panel"></aside>
+          </div>
+        </div>
+
+        <div id="live-covers-detail" class="detail-pane" hidden>
+          <button type="button" id="live-covers-back-btn" class="back-btn">&larr; Back to library</button>
+
+          <form id="live-cover-form">
+            <input type="hidden" id="live-cover-id" />
+            <div class="detail-grid">
+              <div class="cover-col">
+                <div class="cover-preview" id="live-cover-cover-preview">no cover</div>
+                <input type="text" id="live-cover-cover" placeholder="Cover image URL" hidden />
+                <label class="upload-label">Upload cover
+                  <input type="file" id="live-cover-cover-upload" accept="image/*" hidden />
+                </label>
+              </div>
+              <div class="fields-col">
+                <div class="field">
+                  <label for="live-cover-title">Title</label>
+                  <input type="text" id="live-cover-title" placeholder="Title" required />
+                </div>
+                <div class="field">
+                  <label for="live-cover-english-title">Alternative title</label>
+                  <input type="text" id="live-cover-english-title" placeholder="Alternative title (optional)" />
+                </div>
+                <label class="checkbox-field">
+                  <input type="checkbox" id="live-cover-show-english-title" />
+                  Show alternative title
+                </label>
+                <div class="field">
+                  <label for="live-cover-artist">Performed by</label>
+                  <input type="text" id="live-cover-artist" placeholder="Performed by" />
+                </div>
+                <div class="field">
+                  <label for="live-cover-original-artist">Original artist</label>
+                  <input type="text" id="live-cover-original-artist" placeholder="Original artist (if a cover)" />
+                </div>
+                <div class="field">
+                  <label for="live-cover-year">Year</label>
+                  <input type="text" id="live-cover-year" placeholder="Year" />
+                </div>
+                <div class="field">
+                  <label for="live-cover-link">Link</label>
+                  <input type="text" id="live-cover-link" placeholder="Link to the recording or video" />
+                </div>
+              </div>
+            </div>
+
+            <div class="tags-section">
+              <h3>Tags</h3>
+              <div id="live-cover-tags" class="chip-list"></div>
+              <div class="add-row">
+                <input type="text" id="new-live-cover-tag-text" placeholder="Add a tag..." />
+                <button type="button" id="add-live-cover-tag-btn">+ Add tag</button>
+              </div>
+            </div>
+
+            <div class="thoughts-section">
+              <h3>Thoughts</h3>
+              <div id="live-cover-thoughts" class="thoughts-list"></div>
+              <div class="add-row">
+                <input type="date" id="new-live-cover-thought-date" />
+                <textarea id="new-live-cover-thought-text" class="thought-textarea" placeholder="New thought..." rows="2"></textarea>
+                <button type="button" id="add-live-cover-thought-btn">+ Add thought</button>
+              </div>
+            </div>
+
+            <h3>Notes</h3>
+            <textarea id="live-cover-notes" placeholder="Overall thoughts..." rows="6"></textarea>
+
+            <div class="editor-actions" style="margin-top: 1rem;">
+              <button type="submit" id="live-cover-save-btn">Save</button>
+              <button type="button" id="live-cover-delete-btn" class="danger" hidden>Delete</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </section>
 
     <section id="section-journal" class="section" hidden>
@@ -547,6 +693,7 @@
   <script src="/scripts/movies.js"></script>
   <script src="/scripts/tv.js"></script>
   <script src="/scripts/music.js"></script>
+  <script src="/scripts/live-covers.js"></script>
   <script src="/scripts/home.js"></script>
   <script src="/scripts/calendar.js"></script>
 </body>

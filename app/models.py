@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class Thought(BaseModel):
@@ -24,6 +24,11 @@ class ReadDate(BaseModel):
     format: str = "physical"  # physical | ebook | audiobook — the format read on this date
 
 
+class WatchDate(BaseModel):
+    date: str
+    cinema: bool = False  # watched in a cinema/theater, as opposed to at home
+
+
 class BookIn(BaseModel):
     title: str
     english_title: str = ""
@@ -40,7 +45,7 @@ class BookIn(BaseModel):
     status: str = "want_to_read"  # want_to_read | reading | finished | dnf
     openlibrary_id: str = ""
     tags: list[str] = []
-    rating: int | None = None  # 1-5
+    rating: float | None = None  # 0.5-5, in 0.5 steps
     favorite: bool = False
     read_dates: list[ReadDate] = []
     thoughts: list[Thought] = []
@@ -59,11 +64,22 @@ class MovieIn(BaseModel):
     tmdb_id: int | None = None
     poster: str = ""
     tags: list[str] = []
-    rating: int | None = None  # 1-5
+    cast: list[str] = []
+    crew: list[str] = []
+    rating: float | None = None  # 0.5-5, in 0.5 steps
     favorite: bool = False
-    watch_dates: list[str] = []
+    watch_dates: list[WatchDate] = []
     thoughts: list[Thought] = []
     notes: str = ""
+
+    @field_validator("watch_dates", mode="before")
+    @classmethod
+    def _migrate_plain_date_strings(cls, value):
+        # Old markdown files (and older API payloads) store watch_dates as a
+        # plain list of ISO date strings, from before the cinema flag existed.
+        if not value:
+            return value
+        return [{"date": item, "cinema": False} if isinstance(item, str) else item for item in value]
 
 
 class MovieOut(MovieIn):
@@ -78,6 +94,8 @@ class ShowIn(BaseModel):
     tmdb_id: int | None = None
     poster: str = ""
     tags: list[str] = []
+    cast: list[str] = []
+    crew: list[str] = []
     favorite: bool = False
     thoughts: list[Thought] = []
     notes: str = ""
@@ -149,3 +167,26 @@ class AlbumDetailOut(AlbumOut):
 
 class LyricsIn(BaseModel):
     lyrics: str
+
+
+class LiveCoverIn(BaseModel):
+    """A standalone track that isn't part of a formal studio album — a live
+    performance, cover, or adaptation of a song. Kept separate from Album so
+    these don't need to be shoehorned into an album's track list."""
+
+    title: str
+    english_title: str = ""
+    show_english_title: bool = False
+    artist: str = ""  # who performed this version
+    original_artist: str = ""  # who wrote/originally performed it, if a cover
+    year: str = ""
+    cover: str = ""
+    link: str = ""  # URL to the recording/video
+    tags: list[str] = []
+    favorite: bool = False
+    thoughts: list[Thought] = []
+    notes: str = ""
+
+
+class LiveCoverOut(LiveCoverIn):
+    id: str

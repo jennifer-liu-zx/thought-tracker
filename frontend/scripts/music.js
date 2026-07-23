@@ -104,6 +104,12 @@
     addBtn: addThoughtBtn,
   });
 
+  const notesViewEl = document.createElement("div");
+  notesViewEl.className = "notes-view";
+  notesViewEl.hidden = true;
+  notesEl.insertAdjacentElement("afterend", notesViewEl);
+  const notesEditor = createNotesEditor({ container: notesViewEl, textarea: notesEl });
+
   function renderTags() {
     tagsEl.innerHTML = "";
     tags.forEach((tag, i) => {
@@ -159,6 +165,7 @@
     releaseTypeEl.value = "album";
     coverEl.value = "";
     notesEl.value = "";
+    notesEditor.reset();
     thoughts = [];
     tags = [];
     favorite = false;
@@ -260,14 +267,13 @@
     englishTitleSection.className = "mini-section";
     englishTitleSection.innerHTML = `
       <div class="field">
-        <label>English title</label>
-        <input type="text" class="track-english-title" placeholder="English title (optional)" />
+        <label>Alternative title</label>
+        <input type="text" class="track-english-title" placeholder="Alternative title (optional)" />
       </div>
       <label class="checkbox-field">
         <input type="checkbox" class="track-show-english-title" />
-        Show English title
+        Show alternative title
       </label>
-      <button type="button" class="save-english-title-btn">Save</button>
     `;
     body.appendChild(englishTitleSection);
 
@@ -276,10 +282,10 @@
     linkSection.innerHTML = `<h4>Link</h4><input type="text" class="track-link" placeholder="Link to the song or video (YouTube, Spotify, etc.)" />`;
     body.appendChild(linkSection);
 
-    const creditsDetails = document.createElement("details");
-    creditsDetails.className = "credits-details";
-    creditsDetails.innerHTML = `
-      <summary>Credits</summary>
+    const creditsSection = document.createElement("div");
+    creditsSection.className = "mini-section";
+    creditsSection.innerHTML = `
+      <h4>Credits</h4>
       <div class="credits-fields">
         <div class="field">
           <label>Writer(s)</label>
@@ -298,14 +304,18 @@
           <input type="text" class="track-label" placeholder="Label" />
         </div>
       </div>
-      <button type="button" class="save-credits-btn">Save credits</button>
     `;
-    body.appendChild(creditsDetails);
+    body.appendChild(creditsSection);
 
     const lyricsSection = document.createElement("div");
     lyricsSection.className = "mini-section";
-    lyricsSection.innerHTML = `<h4>Lyrics</h4><textarea class="lyrics-box" placeholder="Paste lyrics, or upload a .txt file..."></textarea><div class="add-row" style="margin-top: 0.5rem;"><label class="upload-label" style="flex:none;">Upload .txt<input type="file" accept=".txt" hidden /></label><button type="button" class="save-lyrics-btn">Save lyrics</button></div>`;
+    lyricsSection.innerHTML = `<h4>Lyrics</h4><textarea class="lyrics-box" placeholder="Paste lyrics, or upload a .txt file..."></textarea><label class="upload-label" style="margin-top: 0.5rem;">Upload .txt<input type="file" accept=".txt" hidden /></label>`;
     body.appendChild(lyricsSection);
+
+    const trackSaveRow = document.createElement("div");
+    trackSaveRow.className = "editor-actions";
+    trackSaveRow.innerHTML = `<button type="button" class="track-save-btn">Save</button>`;
+    body.appendChild(trackSaveRow);
 
     const thoughtsSection = document.createElement("div");
     thoughtsSection.className = "mini-section";
@@ -322,18 +332,16 @@
 
     const englishTitleInput = englishTitleSection.querySelector(".track-english-title");
     const showEnglishTitleCheckbox = englishTitleSection.querySelector(".track-show-english-title");
-    const saveEnglishTitleBtn = englishTitleSection.querySelector(".save-english-title-btn");
     englishTitleInput.value = track.english_title || "";
     showEnglishTitleCheckbox.checked = !!track.show_english_title;
 
     const linkInput = linkSection.querySelector(".track-link");
     linkInput.value = track.link || "";
 
-    const writersInput = creditsDetails.querySelector(".track-writers");
-    const producersInput = creditsDetails.querySelector(".track-producers");
-    const featuringInput = creditsDetails.querySelector(".track-featuring");
-    const labelInput = creditsDetails.querySelector(".track-label");
-    const saveCreditsBtn = creditsDetails.querySelector(".save-credits-btn");
+    const writersInput = creditsSection.querySelector(".track-writers");
+    const producersInput = creditsSection.querySelector(".track-producers");
+    const featuringInput = creditsSection.querySelector(".track-featuring");
+    const labelInput = creditsSection.querySelector(".track-label");
     writersInput.value = track.writers || "";
     producersInput.value = track.producers || "";
     featuringInput.value = track.featuring || "";
@@ -342,7 +350,7 @@
     const lyricsBox = lyricsSection.querySelector(".lyrics-box");
     lyricsBox.value = track.lyrics || "";
     const uploadInput = lyricsSection.querySelector('input[type="file"]');
-    const saveLyricsBtn = lyricsSection.querySelector(".save-lyrics-btn");
+    const trackSaveBtn = trackSaveRow.querySelector(".track-save-btn");
     const trackThoughtsEl = thoughtsSection.querySelector(".track-thoughts");
     const newTrackThoughtDateEl = thoughtsSection.querySelector(".track-new-thought-date");
     const newTrackThoughtTextEl = thoughtsSection.querySelector(".track-new-thought-text");
@@ -358,13 +366,13 @@
       reader.readAsText(file);
     });
 
-    saveLyricsBtn.addEventListener("click", async () => {
+    async function saveLyrics() {
       await fetch(`/api/music/${albumId}/tracks/${track.id}/lyrics`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lyrics: lyricsBox.value }),
       });
-    });
+    }
 
     const trackThoughtsEditor = createThoughtsEditor({
       container: trackThoughtsEl,
@@ -394,21 +402,20 @@
       });
     }
 
-    saveEnglishTitleBtn.addEventListener("click", () => {
+    // One consolidated Save for the whole track — alternative title, link,
+    // credits, and lyrics — rather than a separate button per field group.
+    trackSaveBtn.addEventListener("click", async () => {
       track.english_title = englishTitleInput.value;
       track.show_english_title = showEnglishTitleCheckbox.checked;
-      saveTrack();
-      // The collapsed summary reflects the toggle immediately, without a full re-fetch.
-      summary.querySelector(".ep-name").textContent = pickDisplayTitle(track) || "(untitled)";
-    });
-
-    saveCreditsBtn.addEventListener("click", () => {
       track.link = linkInput.value;
       track.writers = writersInput.value;
       track.producers = producersInput.value;
       track.featuring = featuringInput.value;
       track.label = labelInput.value;
-      saveTrack();
+      await Promise.all([saveTrack(), saveLyrics()]);
+      track.lyrics = lyricsBox.value;
+      // The collapsed summary reflects the toggle immediately, without a full re-fetch.
+      summary.querySelector(".ep-name").textContent = pickDisplayTitle(track) || "(untitled)";
     });
 
     delBtn.addEventListener("click", async () => {
@@ -445,6 +452,7 @@
     releaseTypeEl.value = album.release_type || "album";
     coverEl.value = album.cover || "";
     notesEl.value = album.notes || "";
+    notesEditor.load();
     thoughts = [...(album.thoughts || [])];
     tags = [...(album.tags || [])];
     favorite = !!album.favorite;

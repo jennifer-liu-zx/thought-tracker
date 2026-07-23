@@ -21,6 +21,7 @@
   const notesEl = document.getElementById("movie-notes");
   const watchDatesEl = document.getElementById("movie-watch-dates");
   const newWatchDateEl = document.getElementById("new-watch-date");
+  const newWatchDateCinemaEl = document.getElementById("new-watch-date-cinema");
   const addWatchDateBtn = document.getElementById("add-watch-date-btn");
   const thoughtsEl = document.getElementById("movie-thoughts");
   const newThoughtDateEl = document.getElementById("new-movie-thought-date");
@@ -29,12 +30,20 @@
   const tagsEl = document.getElementById("movie-tags");
   const newTagTextEl = document.getElementById("new-movie-tag-text");
   const addTagBtn = document.getElementById("add-movie-tag-btn");
+  const castEl = document.getElementById("movie-cast");
+  const newCastTextEl = document.getElementById("new-movie-cast-text");
+  const addCastBtn = document.getElementById("add-movie-cast-btn");
+  const crewEl = document.getElementById("movie-crew");
+  const newCrewTextEl = document.getElementById("new-movie-crew-text");
+  const addCrewBtn = document.getElementById("add-movie-crew-btn");
   const deleteBtn = document.getElementById("movie-delete-btn");
   const ratingEl = document.getElementById("movie-rating");
 
   let watchDates = [];
   let thoughts = [];
   let tags = [];
+  let cast = [];
+  let crew = [];
   let rating = null;
   let favorite = false;
   let searchDebounce = null;
@@ -89,8 +98,8 @@
         cover: m.poster,
         year: m.year,
         rating: m.rating,
-        tags: m.tags || [],
-        keywords: [...(m.tags || []), m.title, m.english_title].join(" "),
+        tags: [...(m.tags || []), ...(m.cast || []), ...(m.crew || [])],
+        keywords: [...(m.tags || []), ...(m.cast || []), ...(m.crew || []), m.title, m.english_title].join(" "),
       }))
     );
   }
@@ -103,10 +112,11 @@
 
   function renderWatchDates() {
     watchDatesEl.innerHTML = "";
-    watchDates.forEach((date, i) => {
+    watchDates.forEach((wd, i) => {
       const chip = document.createElement("span");
       chip.className = "chip";
-      chip.innerHTML = `${date} <button type="button" aria-label="remove">&times;</button>`;
+      const cinemaLabel = wd.cinema ? " (cinema)" : "";
+      chip.innerHTML = `${escapeHtml(wd.date)}${cinemaLabel} <button type="button" aria-label="remove">&times;</button>`;
       chip.querySelector("button").addEventListener("click", () => {
         watchDates.splice(i, 1);
         renderWatchDates();
@@ -123,12 +133,19 @@
     addBtn: addThoughtBtn,
   });
 
+  const notesViewEl = document.createElement("div");
+  notesViewEl.className = "notes-view";
+  notesViewEl.hidden = true;
+  notesEl.insertAdjacentElement("afterend", notesViewEl);
+  const notesEditor = createNotesEditor({ container: notesViewEl, textarea: notesEl });
+
   addWatchDateBtn.addEventListener("click", () => {
     const date = newWatchDateEl.value;
-    if (!date || watchDates.includes(date)) return;
-    watchDates.push(date);
-    watchDates.sort();
+    if (!date || watchDates.some((wd) => wd.date === date)) return;
+    watchDates.push({ date, cinema: newWatchDateCinemaEl.checked });
+    watchDates.sort((a, b) => a.date.localeCompare(b.date));
     newWatchDateEl.value = "";
+    newWatchDateCinemaEl.checked = false;
     renderWatchDates();
   });
 
@@ -152,6 +169,20 @@
     tags.push(tag);
     newTagTextEl.value = "";
     renderTags();
+  });
+
+  const castEditor = createChipListEditor({
+    container: castEl,
+    getItems: () => cast,
+    textInput: newCastTextEl,
+    addBtn: addCastBtn,
+  });
+
+  const crewEditor = createChipListEditor({
+    container: crewEl,
+    getItems: () => crew,
+    textInput: newCrewTextEl,
+    addBtn: addCrewBtn,
   });
 
   coverEl.addEventListener("input", updateCoverPreview);
@@ -185,15 +216,20 @@
     yearEl.value = "";
     coverEl.value = "";
     notesEl.value = "";
+    notesEditor.reset();
     watchDates = [];
     thoughts = [];
     tags = [];
+    cast = [];
+    crew = [];
     rating = null;
     ratingWidget.setValue(null);
     favorite = false;
     renderWatchDates();
     thoughtsEditor.render();
     renderTags();
+    castEditor.render();
+    crewEditor.render();
     updateCoverPreview();
     deleteBtn.hidden = true;
     searchPanel.hidden = false;
@@ -210,15 +246,20 @@
     yearEl.value = movie.year || "";
     coverEl.value = movie.poster || "";
     notesEl.value = movie.notes || "";
+    notesEditor.load();
     watchDates = [...(movie.watch_dates || [])];
     thoughts = [...(movie.thoughts || [])];
     tags = [...(movie.tags || [])];
+    cast = [...(movie.cast || [])];
+    crew = [...(movie.crew || [])];
     rating = movie.rating || null;
     ratingWidget.setValue(rating);
     favorite = !!movie.favorite;
     renderWatchDates();
     thoughtsEditor.render();
     renderTags();
+    castEditor.render();
+    crewEditor.render();
     updateCoverPreview();
     markClean();
   }
@@ -286,6 +327,8 @@
       poster: coverEl.value,
       notes: notesEl.value,
       tags: tags,
+      cast: cast,
+      crew: crew,
       rating: rating,
       favorite: favorite,
       watch_dates: watchDates,
@@ -306,6 +349,7 @@
     });
     if (!res.ok) return;
     markClean();
+    notesEditor.showSaved();
     showBrowse();
     loadMovies();
     favoritesPanel.refresh();

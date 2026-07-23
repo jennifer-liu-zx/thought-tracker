@@ -12,5 +12,6 @@ MOVIES_DIR = DATA_DIR / "movies"
 TV_DIR = DATA_DIR / "tv"
 BOOKS_DIR = DATA_DIR / "books"
 MUSIC_DIR = DATA_DIR / "music"
+LIVE_COVERS_DIR = DATA_DIR / "live_covers"
 
 load_dotenv(ROOT_DIR / ".env")

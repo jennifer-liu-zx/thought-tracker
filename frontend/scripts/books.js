@@ -166,6 +166,12 @@
     addBtn: addThoughtBtn,
   });
 
+  const notesViewEl = document.createElement("div");
+  notesViewEl.className = "notes-view";
+  notesViewEl.hidden = true;
+  notesEl.insertAdjacentElement("afterend", notesViewEl);
+  const notesEditor = createNotesEditor({ container: notesViewEl, textarea: notesEl });
+
   coverEl.addEventListener("input", updateCoverPreview);
 
   coverUploadEl.addEventListener("change", () => {
@@ -205,6 +211,7 @@
     statusEl.value = "want_to_read";
     coverEl.value = "";
     notesEl.value = "";
+    notesEditor.reset();
     readDates = [];
     thoughts = [];
     tags = [];
@@ -240,6 +247,7 @@
     statusEl.value = book.status || "want_to_read";
     coverEl.value = book.cover || "";
     notesEl.value = book.notes || "";
+    notesEditor.load();
     readDates = [...(book.read_dates || [])];
     thoughts = [...(book.thoughts || [])];
     tags = [...(book.tags || [])];
@@ -345,6 +353,7 @@
     });
     if (!res.ok) return;
     markClean();
+    notesEditor.showSaved();
     showBrowse();
     loadBooks();
     favoritesPanel.refresh();

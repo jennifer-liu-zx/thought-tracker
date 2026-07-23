@@ -1,18 +1,50 @@
-/* Star rating widget */
+/* Star rating widget — half-star precision via a clipped overlay star on
+   top of a muted background star, plus a clear ("x") button. */
 .star-rating {
   display: inline-flex;
-  gap: 0.1rem;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.star-rating .star {
+.star-rating-stars {
+  display: inline-flex;
+  gap: 0.15rem;
+}
+
+.star-wrapper {
+  position: relative;
+  display: inline-block;
   cursor: pointer;
-  font-size: 1.4rem;
+  font-size: 2rem;
   line-height: 1;
+}
+
+.star-back,
+.star-front {
+  display: block;
+}
+
+.star-back {
   color: var(--color-border-input);
 }
 
-.star-rating .star.filled {
+.star-front {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  white-space: nowrap;
   color: var(--color-accent);
+}
+
+.star-clear-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--color-text-faint);
+  padding: 0;
 }
 
 /* Browse layout: main collection + a favourites sidebar */
@@ -189,7 +221,7 @@
   border-color: var(--color-accent);
 }
 
-.tag-filter,
+.tag-filter-btn,
 .sort-select {
   font-family: inherit;
   font-size: 0.85rem;
@@ -198,12 +230,53 @@
   border-radius: var(--radius);
   color: var(--color-text-muted);
   background: var(--color-bg-panel);
+  cursor: pointer;
 }
 
-.tag-filter:focus,
+.tag-filter-btn:focus,
 .sort-select:focus {
   outline: none;
   border-color: var(--color-accent);
+}
+
+/* Multi-select tag filter: a button that toggles a checkbox panel, so more
+   than one tag can be selected at once (match-any semantics). */
+.tag-filter-wrap {
+  position: relative;
+}
+
+.tag-filter-panel {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  z-index: 5;
+  min-width: 180px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 0.5rem;
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius);
+}
+
+.tag-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.4rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tag-filter-option:hover {
+  background: var(--color-bg-hover);
+}
+
+.tag-filter-option input[type="checkbox"] {
+  width: auto;
+  cursor: pointer;
 }
 
 .view-toggle {

@@ -1,3 +1,9 @@
+/** Simple pencil glyph (tip pointing to the lower-left) used for every "edit"
+ * affordance — one filled silhouette with no dividing line across the body,
+ * as an inline SVG rather than a Unicode character so it renders identically
+ * across platforms/fonts. */
+const PENCIL_ICON = `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>`;
+
 function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str == null ? "" : String(str);
@@ -119,28 +125,62 @@ function createFavoritesPanel({ container, fetchAll, toItem, setFavorite, onOpen
 }
 
 /**
- * Renders a 5-star clickable rating widget into `container`.
- * Clicking the currently-set star clears the rating back to none.
- * onChange(value) fires with 1-5 or null.
+ * Renders a 5-star clickable rating widget into `container`, supporting
+ * half-star precision (click the left half of a star for X.5, the right
+ * half for X) plus an explicit clear ("×") control — clicking the exact
+ * current value also clears it, same as before.
+ * onChange(value) fires with 0.5-5 in 0.5 steps, or null.
  */
 function createStarRating({ container, value, onChange }) {
   let current = value || null;
 
   function render() {
     container.innerHTML = "";
+
+    const starsEl = document.createElement("span");
+    starsEl.className = "star-rating-stars";
     for (let i = 1; i <= 5; i++) {
-      const star = document.createElement("span");
-      star.className = "star" + (current && i <= current ? " filled" : "");
-      star.textContent = current && i <= current ? "★" : "☆";
-      star.setAttribute("role", "button");
-      star.setAttribute("aria-label", `${i} star${i === 1 ? "" : "s"}`);
-      star.addEventListener("click", () => {
-        current = current === i ? null : i;
+      const filledFraction = current ? Math.max(0, Math.min(1, current - (i - 1))) : 0;
+
+      const wrapper = document.createElement("span");
+      wrapper.className = "star-wrapper";
+      wrapper.setAttribute("role", "button");
+      wrapper.setAttribute("aria-label", `${i} star${i === 1 ? "" : "s"}`);
+
+      const back = document.createElement("span");
+      back.className = "star-back";
+      back.textContent = "★";
+
+      const front = document.createElement("span");
+      front.className = "star-front";
+      front.textContent = "★";
+      front.style.width = `${filledFraction * 100}%`;
+
+      wrapper.append(back, front);
+      wrapper.addEventListener("click", (e) => {
+        const rect = wrapper.getBoundingClientRect();
+        const clickedLeftHalf = e.clientX - rect.left < rect.width / 2;
+        const newValue = clickedLeftHalf ? i - 0.5 : i;
+        current = current === newValue ? null : newValue;
         render();
         onChange(current);
       });
-      container.appendChild(star);
+      starsEl.appendChild(wrapper);
     }
+    container.appendChild(starsEl);
+
+    const clearBtn = document.createElement("button");
+    clearBtn.type = "button";
+    clearBtn.className = "star-clear-btn";
+    clearBtn.setAttribute("aria-label", "Clear rating");
+    clearBtn.textContent = "×";
+    clearBtn.hidden = !current;
+    clearBtn.addEventListener("click", () => {
+      current = null;
+      render();
+      onChange(current);
+    });
+    container.appendChild(clearBtn);
   }
 
   render();
@@ -151,6 +191,42 @@ function createStarRating({ container, value, onChange }) {
       render();
     },
   };
+}
+
+/**
+ * Renders a simple add/remove chip list (tags, cast, crew, ...) into
+ * `container`, backed by a plain array of strings.
+ * getItems(): () => string[] — must return the caller's live, mutable array.
+ * textInput/addBtn: the existing "add new entry" form controls.
+ */
+function createChipListEditor({ container, getItems, textInput, addBtn }) {
+  function render() {
+    const items = getItems();
+    container.innerHTML = "";
+    items.forEach((item, i) => {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.innerHTML = `${escapeHtml(item)} <button type="button" aria-label="remove">&times;</button>`;
+      chip.querySelector("button").addEventListener("click", () => {
+        items.splice(i, 1);
+        render();
+      });
+      container.appendChild(chip);
+    });
+  }
+
+  addBtn.addEventListener("click", () => {
+    const value = textInput.value.trim();
+    const items = getItems();
+    if (!value || items.includes(value)) return;
+    items.push(value);
+    textInput.value = "";
+    render();
+  });
+
+  render();
+
+  return { render };
 }
 
 /**
@@ -167,6 +243,56 @@ function createStarRating({ container, value, onChange }) {
  * tracks persist immediately (PUT per change) instead of waiting for a form's
  * own Save button.
  */
+/**
+ * Wraps a notes/review <textarea> with a view/edit toggle: once notes have
+ * been saved, they render as plain read-only text with no box around them
+ * and a pencil button to re-enter edit mode, instead of always showing the
+ * textarea. The textarea itself stays the source of truth (buildPayload()
+ * still just reads textarea.value) — this only controls which of the two
+ * is visible.
+ */
+function createNotesEditor({ container, textarea }) {
+  function renderView() {
+    container.innerHTML = "";
+    const p = document.createElement("p");
+    p.className = "notes-view-text";
+    p.textContent = textarea.value;
+    const editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "notes-edit-btn";
+    editBtn.setAttribute("aria-label", "Edit notes");
+    editBtn.innerHTML = PENCIL_ICON;
+    editBtn.addEventListener("click", enterEditMode);
+    container.append(p, editBtn);
+  }
+
+  function enterEditMode() {
+    textarea.hidden = false;
+    container.hidden = true;
+  }
+
+  function enterViewMode() {
+    if (!textarea.value.trim()) {
+      enterEditMode();
+      return;
+    }
+    renderView();
+    textarea.hidden = true;
+    container.hidden = false;
+  }
+
+  enterEditMode();
+
+  return {
+    /** Call right after a successful save to collapse into view mode. */
+    showSaved: enterViewMode,
+    /** Call on resetForm()/new-entry to go back to a blank edit box. */
+    reset: enterEditMode,
+    /** Call after loading an existing record — view mode if it has notes. */
+    load: enterViewMode,
+  };
+}
+
 function createThoughtsEditor({ container, getThoughts, dateInput, textInput, addBtn, onChange, collapseAt = 4 }) {
   let expanded = false;
 
@@ -184,7 +310,7 @@ function createThoughtsEditor({ container, getThoughts, dateInput, textInput, ad
           <span class="thought-date">${escapeHtml(t.date)}</span>
           <span class="thought-text">${escapeHtml(t.text)}</span>
           <span class="thought-actions">
-            <button type="button" class="thought-edit-btn" aria-label="edit">edit</button>
+            <button type="button" class="thought-edit-btn" aria-label="Edit thought">${PENCIL_ICON}</button>
             <button type="button" class="thought-delete-btn" aria-label="remove">&times;</button>
           </span>
         </div>
@@ -310,7 +436,7 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
     query: "",
     view: validViews.includes(storedView) ? storedView : "grid",
     sort: localStorage.getItem(`sort:${storageKey}`) || sorts[0].value,
-    tagFilter: "all",
+    tagFilters: [], // empty = no filter; otherwise match ANY selected tag
   };
 
   function renderShell() {
@@ -322,9 +448,10 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
       <div class="collection-toolbar">
         <div class="toolbar-left">
           <input type="search" class="search-box" placeholder="Search..." />
-          <select class="tag-filter">
-            <option value="all">All tags</option>
-          </select>
+          <div class="tag-filter-wrap">
+            <button type="button" class="tag-filter-btn">All tags</button>
+            <div class="tag-filter-panel" hidden></div>
+          </div>
           <select class="sort-select">${sortOptionsHtml}</select>
         </div>
         <div class="view-toggle">
@@ -350,10 +477,10 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
       renderItems();
     });
 
-    const tagFilter = container.querySelector(".tag-filter");
-    tagFilter.addEventListener("change", (e) => {
-      state.tagFilter = e.target.value;
-      renderItems();
+    const tagFilterBtn = container.querySelector(".tag-filter-btn");
+    tagFilterBtn.addEventListener("click", () => {
+      const panel = container.querySelector(".tag-filter-panel");
+      panel.hidden = !panel.hidden;
     });
 
     container.querySelectorAll(".view-toggle button").forEach((btn) => {
@@ -371,16 +498,40 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
     renderItems();
   }
 
+  function updateTagFilterButtonLabel() {
+    const btn = container.querySelector(".tag-filter-btn");
+    if (!btn) return;
+    if (state.tagFilters.length === 0) btn.textContent = "All tags";
+    else if (state.tagFilters.length === 1) btn.textContent = state.tagFilters[0];
+    else btn.textContent = `${state.tagFilters.length} tags`;
+  }
+
   function updateTagFilterOptions() {
-    const tagFilter = container.querySelector(".tag-filter");
-    if (!tagFilter) return;
+    const panel = container.querySelector(".tag-filter-panel");
+    if (!panel) return;
     const uniqueTags = [...new Set(state.items.flatMap((it) => it.tags || []))].sort();
-    const previous = state.tagFilter;
-    tagFilter.innerHTML =
-      `<option value="all">All tags</option>` +
-      uniqueTags.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
-    state.tagFilter = uniqueTags.includes(previous) ? previous : "all";
-    tagFilter.value = state.tagFilter;
+    state.tagFilters = state.tagFilters.filter((t) => uniqueTags.includes(t));
+
+    panel.innerHTML = uniqueTags
+      .map(
+        (t) => `
+          <label class="tag-filter-option">
+            <input type="checkbox" value="${escapeHtml(t)}" ${state.tagFilters.includes(t) ? "checked" : ""} />
+            ${escapeHtml(t)}
+          </label>
+        `
+      )
+      .join("");
+
+    panel.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+      cb.addEventListener("change", () => {
+        state.tagFilters = [...panel.querySelectorAll('input[type="checkbox"]:checked')].map((c) => c.value);
+        updateTagFilterButtonLabel();
+        renderItems();
+      });
+    });
+
+    updateTagFilterButtonLabel();
   }
 
   function renderItems() {
@@ -395,15 +546,15 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
           `${it.title} ${it.subtitle || ""} ${it.keywords || ""}`.toLowerCase().includes(q)
         );
 
-    if (state.tagFilter !== "all") {
-      filtered = filtered.filter((it) => (it.tags || []).includes(state.tagFilter));
+    if (state.tagFilters.length > 0) {
+      filtered = filtered.filter((it) => (it.tags || []).some((t) => state.tagFilters.includes(t)));
     }
 
     const activeSort = sorts.find((s) => s.value === state.sort) || sorts[0];
     filtered = [...filtered].sort(activeSort.cmp);
 
     if (filtered.length === 0) {
-      itemsEl.innerHTML = `<p class="empty-msg">No items${q || state.tagFilter !== "all" ? " match your search/filter" : " yet"}.</p>`;
+      itemsEl.innerHTML = `<p class="empty-msg">No items${q || state.tagFilters.length > 0 ? " match your search/filter" : " yet"}.</p>`;
       return;
     }
 
@@ -432,4 +583,64 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
       renderItems();
     },
   };
+}
+
+/**
+ * Makes a <details> element (with exactly one non-summary child, its
+ * collapsible content wrapper) open/close with a slide animation instead of
+ * the browser's instant show/hide — used for the season/episode accordions.
+ * Intercepts the summary click so we control timing via the Web Animations
+ * API rather than the native instant toggle.
+ */
+function enableSmoothDetails(details, { duration = 300 } = {}) {
+  const summary = details.querySelector(":scope > summary");
+  const content = details.querySelector(":scope > summary ~ *");
+  if (!summary || !content) return;
+
+  let animating = false;
+
+  summary.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (animating) return;
+    if (details.open) collapse();
+    else expand();
+  });
+
+  function expand() {
+    details.open = true;
+    const target = content.scrollHeight;
+    content.style.height = "0px";
+    content.style.overflow = "hidden";
+    animating = true;
+    requestAnimationFrame(() => {
+      const animation = content.animate([{ height: "0px" }, { height: `${target}px` }], {
+        duration,
+        easing: "ease",
+      });
+      animation.onfinish = () => {
+        content.style.height = "";
+        content.style.overflow = "";
+        animating = false;
+      };
+    });
+  }
+
+  function collapse() {
+    const startHeight = content.scrollHeight;
+    content.style.height = `${startHeight}px`;
+    content.style.overflow = "hidden";
+    animating = true;
+    requestAnimationFrame(() => {
+      const animation = content.animate([{ height: `${startHeight}px` }, { height: "0px" }], {
+        duration,
+        easing: "ease",
+      });
+      animation.onfinish = () => {
+        details.open = false;
+        content.style.height = "";
+        content.style.overflow = "";
+        animating = false;
+      };
+    });
+  }
 }
