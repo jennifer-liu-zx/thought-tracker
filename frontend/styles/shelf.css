@@ -456,3 +456,50 @@
   font-size: 0.8rem;
   color: var(--color-text-faint);
 }
+
+.track-flags-row {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.track-star-btn,
+.track-favorite-btn {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.track-star-btn.active,
+.track-favorite-btn.active {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  border-color: var(--color-accent);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pagination-label {
+  font-size: 0.85rem;
+  color: var(--color-text-faint);
+}
+
+.album-link {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+}
+
+.album-link a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
