@@ -178,6 +178,8 @@ class TrackIn(BaseModel):
     label: str = ""
     favorite: bool = False
     favorite_order: int | None = None  # manual drag-reorder position in the home page favourites lane
+    starred: bool = False  # Song View membership — a strictly broader set than favorite
+    tags: list[str] = []  # per-song tags, independent of the album's own tags
     thoughts: list[Thought] = []
 
 

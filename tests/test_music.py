@@ -61,6 +61,63 @@ def test_track_thoughts_roundtrip(client):
     assert res.json()["thoughts"] == [{"date": "2026-07-21", "text": "Great opener."}]
 
 
+def test_favoriting_a_track_also_stars_it(client):
+    album = _create_album(client)
+    track = _create_track(client, album["id"])
+
+    res = client.put(
+        f"/api/music/{album['id']}/tracks/{track['id']}",
+        json={"track_number": 1, "title": "Opening Track", "favorite": True},
+    )
+    assert res.status_code == 200
+    assert res.json()["favorite"] is True
+    assert res.json()["starred"] is True
+
+
+def test_starring_a_track_without_favoriting_it(client):
+    album = _create_album(client)
+    track = _create_track(client, album["id"])
+
+    res = client.put(
+        f"/api/music/{album['id']}/tracks/{track['id']}",
+        json={"track_number": 1, "title": "Opening Track", "starred": True},
+    )
+    assert res.status_code == 200
+    assert res.json()["starred"] is True
+    assert res.json()["favorite"] is False
+
+
+def test_track_tags_roundtrip(client):
+    album = _create_album(client)
+    track = _create_track(client, album["id"])
+
+    res = client.put(
+        f"/api/music/{album['id']}/tracks/{track['id']}",
+        json={"track_number": 1, "title": "Opening Track", "tags": ["wistful", "upbeat"]},
+    )
+    assert res.status_code == 200
+    assert res.json()["tags"] == ["wistful", "upbeat"]
+
+    detail = client.get(f"/api/music/{album['id']}").json()
+    assert detail["tracks"][0]["tags"] == ["wistful", "upbeat"]
+
+
+def test_list_all_tracks_includes_starred_and_tags(client):
+    album = _create_album(client)
+    _create_track(client, album["id"], track_number=1, title="Song A")
+    track_b = _create_track(client, album["id"], track_number=2, title="Song B")
+    client.put(
+        f"/api/music/{album['id']}/tracks/{track_b['id']}",
+        json={"track_number": 2, "title": "Song B", "starred": True, "tags": ["sad"]},
+    )
+
+    all_tracks = client.get("/api/music/tracks").json()
+    by_title = {t["title"]: t for t in all_tracks}
+    assert by_title["Song A"]["starred"] is False
+    assert by_title["Song B"]["starred"] is True
+    assert by_title["Song B"]["tags"] == ["sad"]
+
+
 def test_reordering_track_keeps_same_id_lyrics_and_thoughts(client):
     """Renumbering (drag-to-reorder) must never orphan a track's lyrics/thoughts —
     the id is a stable title slug, track_number is just a sortable field on it."""

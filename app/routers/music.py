@@ -30,6 +30,17 @@ def _lyrics_path(album_id: str, track_id: str):
     return _album_dir(album_id) / "lyrics" / f"{track_id}.txt"
 
 
+def _normalize_track(track: TrackIn) -> TrackIn:
+    """Enforce favorite ⇒ starred: the home-page favourites lane is meant to
+    be a strictly narrower set than Song View membership. The two flags can
+    arrive independently (e.g. favoriting from the Albums favourites panel
+    doesn't know about `starred`), so this is enforced on write rather than
+    trusting every caller to set both."""
+    if track.favorite and not track.starred:
+        track.starred = True
+    return track
+
+
 def _list_track_files(album_id: str):
     tracks_dir = _tracks_dir(album_id)
     if not tracks_dir.exists():
@@ -166,6 +177,7 @@ def delete_album(album_id: str):
 @router.post("/{album_id}/tracks", response_model=TrackOut)
 def create_track(album_id: str, track: TrackIn):
     require_exists(_album_path(album_id), "Album not found")
+    track = _normalize_track(track)
     # The track's id is a stable slug of its title, independent of track_number —
     # so reordering later just edits the number in place and never touches this
     # file (or its lyrics), meaning thoughts/lyrics can never be orphaned by a move.
@@ -238,6 +250,7 @@ async def fetch_lyrics(album_id: str, track_id: str):
 @router.put("/{album_id}/tracks/{track_id}", response_model=TrackOut)
 def update_track(album_id: str, track_id: str, track: TrackIn):
     path = require_exists(_track_path(album_id, track_id), "Track not found")
+    track = _normalize_track(track)
     metadata = track.model_dump()
     write_entry(path, metadata, "")
     return _track_to_out(album_id, path, metadata)
