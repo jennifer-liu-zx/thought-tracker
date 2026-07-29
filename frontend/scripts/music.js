@@ -72,59 +72,14 @@
 
   const RELEASE_TYPE_LABELS = { ep: "EP", single: "Single", live: "Live" };
 
-  // The Albums favourites panel favourites individual songs, not whole
-  // albums — a composite "albumId::trackId" id carries both halves through
-  // createFavoritesPanel's generic {id} interface, split back apart here.
-  function packTrackId(albumId, trackId) {
-    return `${albumId}::${trackId}`;
-  }
-
-  function unpackTrackId(compositeId) {
-    const [albumId, trackId] = compositeId.split("::");
-    return { albumId, trackId };
-  }
-
-  // Every full-track PUT (favoriting, reordering, renumbering after a
-  // delete, the track's own Save button) must resend every field TrackIn
-  // knows about, or the API silently resets whatever's omitted back to its
-  // default — this happened for real with several of these call sites
-  // (favorite/favorite_order/duration/composers kept getting dropped one at
-  // a time as fields were added over time). One shared builder instead of
-  // N duplicated field lists closes off that whole bug class.
-  function trackToPayload(t) {
-    return {
-      track_number: t.track_number,
-      title: t.title,
-      english_title: t.english_title || "",
-      show_english_title: !!t.show_english_title,
-      link: t.link || "",
-      duration: t.duration || "",
-      writers: t.writers || "",
-      composers: t.composers || "",
-      producers: t.producers || "",
-      featuring: t.featuring || "",
-      label: t.label || "",
-      favorite: t.favorite,
-      favorite_order: t.favorite_order,
-      thoughts: t.thoughts,
-    };
-  }
-
-  function putTrack(albumId, trackId, t) {
-    return fetch(`/api/music/${albumId}/tracks/${trackId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(trackToPayload(t)),
-    });
-  }
-
   async function setTrackFavorite(compositeId, value) {
     const { albumId, trackId } = unpackTrackId(compositeId);
     const album = await fetch(`/api/music/${albumId}`).then((r) => r.json());
     const track = album.tracks.find((t) => t.id === trackId);
     if (!track) return;
     track.favorite = value;
-    await putTrack(albumId, trackId, track);
+    if (value) track.starred = true; // favorite implies starred
+    await putTrack(albumId, track);
   }
 
   async function openFavoriteTrack(compositeId) {
@@ -333,215 +288,23 @@
 
     const body = document.createElement("div");
     body.className = "episode-body";
+    details.appendChild(body);
 
-    const titleView = document.createElement("div");
-    titleView.className = "track-title-view";
-    titleView.innerHTML = `
-      <span class="track-title-display"></span>
-      <button type="button" class="track-title-edit-btn" aria-label="Edit title">${PENCIL_ICON}</button>
-    `;
-    body.appendChild(titleView);
-
-    const titleInput = document.createElement("input");
-    titleInput.type = "text";
-    titleInput.className = "track-title-input";
-    titleInput.placeholder = "Track title";
-    titleInput.hidden = true;
-    body.appendChild(titleInput);
-
-    const titleDisplay = titleView.querySelector(".track-title-display");
-    titleDisplay.textContent = track.title;
-
-    titleView.querySelector(".track-title-edit-btn").addEventListener("click", () => {
-      titleInput.value = track.title;
-      titleView.hidden = true;
-      titleInput.hidden = false;
-      titleInput.focus();
+    createTrackFieldsEditor({
+      container: body,
+      albumId,
+      track,
+      onSaved: () => {
+        // The collapsed summary reflects the toggle immediately, without a full re-fetch.
+        summary.querySelector(".ep-name").textContent = pickDisplayTitle(track) || "(untitled)";
+      },
     });
-
-    const englishTitleSection = document.createElement("div");
-    englishTitleSection.className = "mini-section";
-    englishTitleSection.innerHTML = `
-      <div class="field">
-        <label>Alternative title</label>
-        <input type="text" class="track-english-title" placeholder="Alternative title (optional)" />
-      </div>
-      <label class="checkbox-field">
-        <input type="checkbox" class="track-show-english-title" />
-        Show alternative title
-      </label>
-    `;
-    body.appendChild(englishTitleSection);
-
-    const linkSection = document.createElement("div");
-    linkSection.className = "mini-section";
-    linkSection.innerHTML = `
-      <h4>Link</h4>
-      <div class="field-row">
-        <input type="text" class="track-link" placeholder="Link to the song or video (YouTube, Spotify, etc.)" />
-        <input type="text" class="track-duration" placeholder="Duration (e.g. 3:45)" style="max-width: 8rem;" />
-      </div>
-    `;
-    body.appendChild(linkSection);
-
-    const creditsSection = document.createElement("div");
-    creditsSection.className = "mini-section";
-    creditsSection.innerHTML = `
-      <h4>Credits</h4>
-      <div class="credits-fields">
-        <div class="field">
-          <label>Writer(s)</label>
-          <input type="text" class="track-writers" placeholder="Writer(s)" />
-        </div>
-        <div class="field">
-          <label>Composer(s)</label>
-          <input type="text" class="track-composers" placeholder="Composer(s)" />
-        </div>
-        <div class="field">
-          <label>Producer(s)</label>
-          <input type="text" class="track-producers" placeholder="Producer(s)" />
-        </div>
-        <div class="field">
-          <label>Featuring</label>
-          <input type="text" class="track-featuring" placeholder="Featuring" />
-        </div>
-        <div class="field">
-          <label>Label</label>
-          <input type="text" class="track-label" placeholder="Label" />
-        </div>
-      </div>
-    `;
-    body.appendChild(creditsSection);
-
-    const lyricsSection = document.createElement("div");
-    lyricsSection.className = "mini-section";
-    lyricsSection.innerHTML = `
-      <h4>Lyrics</h4>
-      <textarea class="lyrics-box" placeholder="Paste lyrics, or upload a .txt file..."></textarea>
-      <div class="editor-actions" style="margin-top: 0.5rem;">
-        <label class="upload-label">Upload .txt<input type="file" accept=".txt" hidden /></label>
-        <button type="button" class="fetch-lyrics-btn">Fetch lyrics (LRCLIB)</button>
-      </div>
-    `;
-    body.appendChild(lyricsSection);
-
-    const trackSaveRow = document.createElement("div");
-    trackSaveRow.className = "editor-actions";
-    trackSaveRow.innerHTML = `<button type="button" class="track-save-btn">Save</button>`;
-    body.appendChild(trackSaveRow);
-
-    const thoughtsSection = document.createElement("div");
-    thoughtsSection.className = "mini-section";
-    thoughtsSection.innerHTML = `<h4>Thoughts</h4><div class="thoughts-list track-thoughts"></div><div class="add-row"><input type="date" class="track-new-thought-date" /><textarea class="thought-textarea track-new-thought-text" placeholder="New thought..." rows="2"></textarea><button type="button" class="track-add-thought-btn">+ Add thought</button></div>`;
-    body.appendChild(thoughtsSection);
 
     const delBtn = document.createElement("button");
     delBtn.type = "button";
     delBtn.className = "danger";
     delBtn.textContent = "Delete track";
     body.appendChild(delBtn);
-
-    details.appendChild(body);
-
-    const englishTitleInput = englishTitleSection.querySelector(".track-english-title");
-    const showEnglishTitleCheckbox = englishTitleSection.querySelector(".track-show-english-title");
-    englishTitleInput.value = track.english_title || "";
-    showEnglishTitleCheckbox.checked = !!track.show_english_title;
-
-    const linkInput = linkSection.querySelector(".track-link");
-    const durationInput = linkSection.querySelector(".track-duration");
-    linkInput.value = track.link || "";
-    durationInput.value = track.duration || "";
-
-    const writersInput = creditsSection.querySelector(".track-writers");
-    const composersInput = creditsSection.querySelector(".track-composers");
-    const producersInput = creditsSection.querySelector(".track-producers");
-    const featuringInput = creditsSection.querySelector(".track-featuring");
-    const labelInput = creditsSection.querySelector(".track-label");
-    writersInput.value = track.writers || "";
-    composersInput.value = track.composers || "";
-    producersInput.value = track.producers || "";
-    featuringInput.value = track.featuring || "";
-    labelInput.value = track.label || "";
-
-    const lyricsBox = lyricsSection.querySelector(".lyrics-box");
-    lyricsBox.value = track.lyrics || "";
-    const uploadInput = lyricsSection.querySelector('input[type="file"]');
-    const fetchLyricsBtn = lyricsSection.querySelector(".fetch-lyrics-btn");
-    const trackSaveBtn = trackSaveRow.querySelector(".track-save-btn");
-    const trackThoughtsEl = thoughtsSection.querySelector(".track-thoughts");
-    const newTrackThoughtDateEl = thoughtsSection.querySelector(".track-new-thought-date");
-    const newTrackThoughtTextEl = thoughtsSection.querySelector(".track-new-thought-text");
-    const addTrackThoughtBtn = thoughtsSection.querySelector(".track-add-thought-btn");
-
-    uploadInput.addEventListener("change", () => {
-      const file = uploadInput.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        lyricsBox.value = reader.result;
-      };
-      reader.readAsText(file);
-    });
-
-    fetchLyricsBtn.addEventListener("click", async () => {
-      const res = await fetch(`/api/music/${albumId}/tracks/${track.id}/fetch-lyrics`);
-      if (!res.ok) return;
-      const { lyrics } = await res.json();
-      if (!lyrics) {
-        alert("LRCLIB didn't have a match for this song — try pasting lyrics manually.");
-        return;
-      }
-      // A first pass only — the user reviews/corrects this before it's
-      // actually saved, via the same consolidated Save button as everything else.
-      lyricsBox.value = lyrics;
-    });
-
-    async function saveLyrics() {
-      await fetch(`/api/music/${albumId}/tracks/${track.id}/lyrics`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lyrics: lyricsBox.value }),
-      });
-    }
-
-    const trackThoughtsEditor = createThoughtsEditor({
-      container: trackThoughtsEl,
-      getThoughts: () => track.thoughts,
-      dateInput: newTrackThoughtDateEl,
-      textInput: newTrackThoughtTextEl,
-      addBtn: addTrackThoughtBtn,
-      onChange: saveTrack,
-    });
-
-    async function saveTrack() {
-      await putTrack(albumId, track.id, track);
-    }
-
-    // One consolidated Save for the whole track — alternative title, link,
-    // credits, and lyrics — rather than a separate button per field group.
-    trackSaveBtn.addEventListener("click", async () => {
-      if (!titleInput.hidden && titleInput.value.trim()) {
-        track.title = titleInput.value.trim();
-      }
-      track.english_title = englishTitleInput.value;
-      track.show_english_title = showEnglishTitleCheckbox.checked;
-      track.link = linkInput.value;
-      track.duration = durationInput.value;
-      track.writers = writersInput.value;
-      track.composers = composersInput.value;
-      track.producers = producersInput.value;
-      track.featuring = featuringInput.value;
-      track.label = labelInput.value;
-      await Promise.all([saveTrack(), saveLyrics()]);
-      track.lyrics = lyricsBox.value;
-      // Back to view mode, showing whatever title just got saved.
-      titleDisplay.textContent = track.title;
-      titleInput.hidden = true;
-      titleView.hidden = false;
-      // The collapsed summary reflects the toggle immediately, without a full re-fetch.
-      summary.querySelector(".ep-name").textContent = pickDisplayTitle(track) || "(untitled)";
-    });
 
     delBtn.addEventListener("click", async () => {
       if (!confirm(`Delete track "${track.title}"?`)) return;
@@ -556,7 +319,7 @@
         t.track_number = idx + 1;
       });
       renderTracks(albumId, currentTracks);
-      await Promise.all(changed.map((t) => putTrack(albumId, t.id, t)));
+      await Promise.all(changed.map((t) => putTrack(albumId, t)));
     });
 
     enableSmoothDetails(details);

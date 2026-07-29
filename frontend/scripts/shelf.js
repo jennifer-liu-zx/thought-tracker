@@ -16,6 +16,18 @@ function pickDisplayTitle(item) {
   return item.show_english_title && item.english_title ? item.english_title : item.title;
 }
 
+/** Packs two ids into one flat string, for item lists (like createCollectionView's
+ * `items`) that need a single unique `id` per row but the underlying record is
+ * addressed by two ids (e.g. a track's album_id + track_id). */
+function packTrackId(albumId, trackId) {
+  return `${albumId}::${trackId}`;
+}
+
+function unpackTrackId(compositeId) {
+  const [albumId, trackId] = compositeId.split("::");
+  return { albumId, trackId };
+}
+
 /** Cover image, or a single-letter placeholder — shared by every place that
  * renders an item's cover (collection grid/list, favourites panel, home swimlanes). */
 function buildCoverHtml(item) {
