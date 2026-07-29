@@ -5,7 +5,7 @@ const SECTION_REGISTRY_KEYS = {
   home: ["home"],
   movies: ["movies", "tv"],
   books: ["books"],
-  music: ["music", "live-covers"],
+  music: ["music", "live-covers", "song-view"],
   journal: ["journal"],
 };
 
