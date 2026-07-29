@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 
 class Thought(BaseModel):
@@ -133,7 +133,8 @@ class AlbumIn(BaseModel):
     english_title: str = ""
     show_english_title: bool = False
     artist: str = ""
-    year: str = ""
+    release_date: str = ""  # ISO date if known in full, else just a year or year-month
+    country: str = ""
     cover: str = ""
     tags: list[str] = []
     favorite: bool = False
@@ -141,6 +142,20 @@ class AlbumIn(BaseModel):
     release_type: str = "album"  # album | ep | single
     thoughts: list[Thought] = []
     notes: str = ""
+    # Not shown in the UI — kept so "Import tracks" can re-fetch the full
+    # tracklist later without asking the user to search again.
+    mbid: str = ""
+    discogs_id: str = ""
+
+    @model_validator(mode="before")
+    @classmethod
+    def _migrate_year_to_release_date(cls, data):
+        # Existing albums (from before release_date existed) store a bare
+        # `year` field — carry it over so they don't silently lose that
+        # value the next time the album is saved.
+        if isinstance(data, dict) and not data.get("release_date") and data.get("year"):
+            data = {**data, "release_date": data["year"]}
+        return data
 
 
 class AlbumOut(AlbumIn):
@@ -155,7 +170,9 @@ class TrackIn(BaseModel):
     english_title: str = ""
     show_english_title: bool = False  # collapsed view shows english_title instead of title
     link: str = ""  # URL to the song/video (YouTube, Spotify, etc.)
-    writers: str = ""
+    duration: str = ""  # display string, e.g. "3:45"
+    writers: str = ""  # lyricist(s)
+    composers: str = ""  # music composer(s), distinct from lyricist(s)
     producers: str = ""
     featuring: str = ""
     label: str = ""

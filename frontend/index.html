@@ -489,8 +489,15 @@
       <div id="music-detail" class="detail-pane" hidden>
         <button type="button" id="music-back-btn" class="back-btn">&larr; Back to library</button>
 
+        <div id="album-search-panel" class="search-panel">
+          <input type="search" id="album-search-input" placeholder="Search MusicBrainz/Discogs to autofill (optional)..." />
+          <div id="album-search-results" class="search-results"></div>
+        </div>
+
         <form id="album-form">
           <input type="hidden" id="album-id" />
+          <input type="hidden" id="album-mbid" />
+          <input type="hidden" id="album-discogs-id" />
           <div class="detail-grid">
             <div class="cover-col">
               <div class="cover-preview" id="album-cover-preview">no cover</div>
@@ -513,14 +520,20 @@
                 <input type="checkbox" id="album-show-english-title" />
                 Show alternative title
               </label>
-              <div class="field">
-                <label for="album-artist">Artist</label>
-                <input type="text" id="album-artist" placeholder="Artist" />
+              <div class="field-row">
+                <div class="field">
+                  <label for="album-artist">Artist</label>
+                  <input type="text" id="album-artist" placeholder="Artist" />
+                </div>
+                <div class="field">
+                  <label for="album-country">Country</label>
+                  <input type="text" id="album-country" placeholder="Country" />
+                </div>
               </div>
               <div class="field-row">
                 <div class="field">
-                  <label for="album-year">Year</label>
-                  <input type="text" id="album-year" placeholder="Year" />
+                  <label for="album-release-date">Release date</label>
+                  <input type="text" id="album-release-date" placeholder="Release date" />
                 </div>
                 <div class="field">
                   <label>Release type</label>
@@ -562,6 +575,9 @@
         <div id="tracks-panel" hidden>
           <div class="episodes-header">
             <h3>Tracks</h3>
+            <div class="add-row">
+              <button type="button" id="import-tracks-btn" hidden>Import tracklist</button>
+            </div>
           </div>
           <div id="add-track-row" class="add-row">
             <input type="text" id="new-track-title" placeholder="Track title" />

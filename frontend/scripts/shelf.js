@@ -201,7 +201,7 @@ function createStarRating({ container, value, onChange }) {
  * getItems(): () => string[] — must return the caller's live, mutable array.
  * textInput/addBtn: the existing "add new entry" form controls.
  */
-function createChipListEditor({ container, getItems, textInput, addBtn }) {
+function createChipListEditor({ container, getItems, textInput, addBtn, onChange }) {
   function render() {
     const items = getItems();
     container.innerHTML = "";
@@ -212,6 +212,7 @@ function createChipListEditor({ container, getItems, textInput, addBtn }) {
       chip.querySelector("button").addEventListener("click", () => {
         items.splice(i, 1);
         render();
+        onChange?.();
       });
       container.appendChild(chip);
     });
@@ -224,6 +225,7 @@ function createChipListEditor({ container, getItems, textInput, addBtn }) {
     items.push(value);
     textInput.value = "";
     render();
+    onChange?.();
   });
 
   render();

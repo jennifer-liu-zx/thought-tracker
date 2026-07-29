@@ -57,6 +57,12 @@
   background: var(--color-bg-hover);
 }
 
+/* Album covers are square, not the 2:3 portrait movies/books/shows use. */
+#album-search-results img {
+  width: 40px;
+  height: 40px;
+}
+
 .search-result .result-title {
   font-family: var(--font-serif);
   font-size: 0.9rem;
@@ -142,7 +148,8 @@
   object-fit: cover;
 }
 
-.upload-label {
+.upload-label,
+.fetch-lyrics-btn {
   display: inline-flex;
   align-items: center;
   font-family: inherit;
@@ -154,6 +161,7 @@
   cursor: pointer;
   color: var(--color-text-muted);
   white-space: nowrap;
+  background: none;
 }
 
 .fields-col {
@@ -547,9 +555,36 @@
   margin: 0 0 0.4rem;
 }
 
+.track-title-view {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .track-title-display {
   font-family: var(--font-serif);
   font-size: 1.05rem;
+}
+
+.track-title-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--color-text-faint);
+}
+
+.track-title-input {
+  font-family: inherit;
+  font-size: 1.05rem;
+  width: 100%;
+  padding: 0.4rem;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius);
 }
 
 .mini-section .track-link {
@@ -559,7 +594,7 @@
 .credits-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
+  gap: 0.6rem; /* matches .fields-col's field-row spacing (the album metadata above) */
   margin: 0.6rem 0;
 }
 

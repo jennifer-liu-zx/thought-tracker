@@ -32,11 +32,26 @@ function buildPayload() {
 
 const { isDirty, markClean } = createDirtyTracker(buildPayload, { indicatorEl: unsavedIndicator });
 
+async function autoSaveTags() {
+  // Only an already-saved entry can be auto-saved — a brand-new unsaved
+  // entry has no id to PUT to yet, so its tags just ride along with the
+  // first manual Save like everything else on the form.
+  const id = idEl.value;
+  if (!id) return;
+  await fetch(`/api/journal/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(buildPayload()),
+  });
+  markClean();
+}
+
 const tagsEditor = createChipListEditor({
   container: tagsEl,
   getItems: () => tags,
   textInput: newTagTextEl,
   addBtn: addTagBtn,
+  onChange: autoSaveTags,
 });
 
 function updateTagFilterButtonLabel() {

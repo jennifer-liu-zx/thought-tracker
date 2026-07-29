@@ -1,8 +1,9 @@
 import shutil
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from app.config import MUSIC_DIR
+from app.external import discogs, lrclib, musicbrainz
 from app.models import AlbumDetailOut, AlbumIn, AlbumOut, LyricsIn, TrackIn, TrackOut, TrackWithAlbumOut
 from app.storage import read_entry, require_exists, slugify, unique_dir, unique_path, write_entry
 
@@ -106,6 +107,34 @@ def list_all_tracks():
     return results
 
 
+@router.get("/search")
+async def search_metadata(q: str):
+    """MusicBrainz primary, Discogs only as a fallback for what MusicBrainz
+    misses — same "primary + fallback" shape as Books' Open Library +
+    Google Books. If Discogs isn't configured yet (.env has no
+    DISCOGS_TOKEN), that's not surfaced as an error here — MusicBrainz-only
+    results are still useful, and the token can be added anytime."""
+    results = await musicbrainz.search_releases(q)
+    if results:
+        return results
+    try:
+        return await discogs.search_releases(q)
+    except HTTPException as e:
+        if e.status_code == 501:
+            return []
+        raise
+
+
+@router.get("/search-detail")
+async def search_metadata_detail(mbid: str):
+    """MusicBrainz search results are lightweight (no country, tags, or
+    alternative-title candidate) — this fills those in for whichever one
+    result the user actually picked, rather than doing it for all 10.
+    Discogs results don't need this; its search response is already
+    complete for the form."""
+    return await musicbrainz.get_release_group_detail(mbid)
+
+
 @router.get("/{album_id}", response_model=AlbumDetailOut)
 def get_album(album_id: str):
     path = require_exists(_album_path(album_id), "Album not found")
@@ -144,6 +173,66 @@ def create_track(album_id: str, track: TrackIn):
     metadata = track.model_dump()
     write_entry(path, metadata, "")
     return _track_to_out(album_id, path, metadata)
+
+
+@router.post("/{album_id}/import-tracks", response_model=list[TrackOut])
+async def import_tracks(album_id: str):
+    """Fetches the full tracklist for an album that was added via search
+    (mirrors tv.py's import-season). Discogs is preferred when the album has
+    a discogs_id since it reliably captures writer/composer/producer
+    credits, which MusicBrainz's data does not."""
+    path = require_exists(_album_path(album_id), "Album not found")
+    metadata, _ = read_entry(path)
+    discogs_id = metadata.get("discogs_id")
+    mbid = metadata.get("mbid")
+
+    if discogs_id:
+        fetched = await discogs.get_tracklist(discogs_id)
+    elif mbid:
+        fetched = await musicbrainz.get_tracklist(mbid)
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="This album has no mbid or discogs_id (it wasn't added via search) — add tracks manually instead.",
+        )
+
+    # Keyed by track_number rather than title, since track files are named
+    # from a slug of the title and re-running this shouldn't create
+    # duplicates or overwrite a track's existing thoughts/lyrics/credits.
+    existing_numbers = {read_entry(p)[0].get("track_number") for p in _list_track_files(album_id)}
+    for t in fetched:
+        if t["track_number"] in existing_numbers:
+            continue
+        track_in = TrackIn(
+            track_number=t["track_number"],
+            title=t["title"],
+            duration=t.get("duration", ""),
+            writers=t.get("writers", ""),
+            composers=t.get("composers", ""),
+            producers=t.get("producers", ""),
+            featuring=t.get("featuring", ""),
+        )
+        track_path = unique_path(_tracks_dir(album_id), slugify(track_in.title))
+        write_entry(track_path, track_in.model_dump(), "")
+
+    tracks = [_track_to_out(album_id, p, read_entry(p)[0]) for p in _list_track_files(album_id)]
+    tracks.sort(key=lambda t: t.track_number)
+    return tracks
+
+
+@router.get("/{album_id}/tracks/{track_id}/fetch-lyrics")
+async def fetch_lyrics(album_id: str, track_id: str):
+    """A first-pass LRCLIB lookup for one track — returned for the user to
+    review and correct in the lyrics textarea, not saved automatically."""
+    require_exists(_track_path(album_id, track_id), "Track not found")
+    album_metadata, _ = read_entry(_album_path(album_id))
+    track_metadata, _ = read_entry(_track_path(album_id, track_id))
+    lyrics = await lrclib.get_lyrics(
+        artist=album_metadata.get("artist", ""),
+        track=track_metadata.get("title", ""),
+        album=album_metadata.get("title", ""),
+    )
+    return {"lyrics": lyrics}
 
 
 @router.put("/{album_id}/tracks/{track_id}", response_model=TrackOut)

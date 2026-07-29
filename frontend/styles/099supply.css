@@ -357,6 +357,22 @@ main {
   color: var(--sup-muted);
 }
 
+/* !important throughout: base.css's `.editor-actions button` (class+tag,
+   higher specificity than this single class) would otherwise force its own
+   border:none/radius:0 onto this button — same fix as .danger/.track-save-btn.
+   (.upload-label above doesn't need this — it's a <label>, not a <button>,
+   so that base.css rule never targets it regardless of specificity.) */
+.fetch-lyrics-btn {
+  font-size: 0.78rem;
+  border: 1px solid var(--sup-border) !important;
+  border-radius: 9999px !important;
+  color: var(--sup-muted);
+}
+
+.fetch-lyrics-btn:hover {
+  border-color: var(--sup-muted-soft);
+}
+
 .remove-cover-btn {
   font-size: 0.7rem;
   letter-spacing: 0.04em;
@@ -748,6 +764,32 @@ button[type="submit"]:hover {
   font-size: 0.95rem;
   letter-spacing: 0.02em;
   color: var(--sup-ink);
+}
+
+.track-title-edit-btn {
+  color: var(--sup-muted);
+}
+
+.track-title-edit-btn:hover {
+  color: var(--sup-ink);
+}
+
+.track-title-input {
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--sup-border);
+  border-radius: 4px;
+  background: var(--sup-white);
+  color: var(--sup-ink);
+}
+
+.track-title-input:hover {
+  border-color: var(--sup-muted-soft);
+}
+
+.track-title-input:focus {
+  outline: none;
+  border-color: var(--sup-ink);
 }
 
 /* Same specificity fix as .danger above — this button also lives inside
