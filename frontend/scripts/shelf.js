@@ -455,7 +455,7 @@ const DEFAULT_SORT_OPTIONS = [
  * coverAspect (optional): "portrait" (default, 2:3 — books/movies/shows), "square" (albums),
  * or "landscape" (16:9 — Live & Covers video thumbnails).
  */
-function createCollectionView({ container, storageKey, onSelect, sortOptions, coverAspect }) {
+function createCollectionView({ container, storageKey, onSelect, sortOptions, coverAspect, pageSize }) {
   const sorts = sortOptions && sortOptions.length ? sortOptions : DEFAULT_SORT_OPTIONS;
 
   if (coverAspect === "square") {
@@ -472,6 +472,7 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
     query: "",
     view: validViews.includes(storedView) ? storedView : "grid",
     sort: localStorage.getItem(`sort:${storageKey}`) || sorts[0].value,
+    page: 0,
     tagFilters: [], // empty = no filter; otherwise match ANY selected tag
     tagFilterQuery: "", // narrows the checkbox list itself, separate from the main search box
     allTags: [],
@@ -497,12 +498,14 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
         </div>
       </div>
       <div class="collection"></div>
+      <div class="pagination"></div>
     `;
 
     const searchInput = container.querySelector(".search-box");
     searchInput.value = state.query;
     searchInput.addEventListener("input", (e) => {
       state.query = e.target.value;
+      state.page = 0;
       renderItems();
     });
 
@@ -513,6 +516,7 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
       onChange: (value) => {
         state.sort = value;
         localStorage.setItem(`sort:${storageKey}`, state.sort);
+        state.page = 0;
         renderItems();
       },
     });
@@ -596,6 +600,7 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
         const keptHidden = state.tagFilters.filter((t) => !visibleTags.includes(t));
         state.tagFilters = [...keptHidden, ...checkedHere];
         updateTagFilterButtonLabel();
+        state.page = 0;
         renderItems();
       });
     });
@@ -626,10 +631,15 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
 
     if (filtered.length === 0) {
       itemsEl.innerHTML = `<p class="empty-msg">No items${q || state.tagFilters.length > 0 ? " match your search/filter" : " yet"}.</p>`;
+      renderPagination(0);
       return;
     }
 
-    for (const item of filtered) {
+    const totalPages = pageSize ? Math.max(1, Math.ceil(filtered.length / pageSize)) : 1;
+    state.page = Math.min(state.page, totalPages - 1);
+    const pageItems = pageSize ? filtered.slice(state.page * pageSize, (state.page + 1) * pageSize) : filtered;
+
+    for (const item of pageItems) {
       const el = document.createElement("div");
       el.className = "item";
       el.dataset.id = item.id;
@@ -643,6 +653,30 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
       el.addEventListener("click", () => onSelect(item.id));
       itemsEl.appendChild(el);
     }
+
+    renderPagination(totalPages);
+  }
+
+  function renderPagination(totalPages) {
+    const paginationEl = container.querySelector(".pagination");
+    if (!paginationEl) return;
+    if (!pageSize || totalPages <= 1) {
+      paginationEl.innerHTML = "";
+      return;
+    }
+    paginationEl.innerHTML = `
+      <button type="button" class="pagination-prev" ${state.page === 0 ? "disabled" : ""}>&larr; Prev</button>
+      <span class="pagination-label">Page ${state.page + 1} of ${totalPages}</span>
+      <button type="button" class="pagination-next" ${state.page >= totalPages - 1 ? "disabled" : ""}>Next &rarr;</button>
+    `;
+    paginationEl.querySelector(".pagination-prev").addEventListener("click", () => {
+      state.page = Math.max(0, state.page - 1);
+      renderItems();
+    });
+    paginationEl.querySelector(".pagination-next").addEventListener("click", () => {
+      state.page = Math.min(totalPages - 1, state.page + 1);
+      renderItems();
+    });
   }
 
   renderShell();
@@ -650,6 +684,7 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
   return {
     setItems(items) {
       state.items = items;
+      state.page = 0;
       updateTagFilterOptions();
       renderItems();
     },
