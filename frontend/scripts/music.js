@@ -245,7 +245,7 @@
 
     // Same ids/files throughout — reordering only ever edits track_number, so
     // every other field stays attached to the track that owns it.
-    await Promise.all(currentTracks.map((t) => putTrack(albumId, t.id, t)));
+    await Promise.all(currentTracks.map((t) => putTrack(albumId, t)));
   }
 
   function buildTrackElement(albumId, track) {
