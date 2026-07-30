@@ -493,17 +493,6 @@
   color: var(--color-text-faint);
 }
 
-.album-link {
-  margin: 0 0 1rem;
-  font-size: 0.9rem;
-}
-
-.album-link a {
-  color: var(--color-accent);
-  text-decoration: underline;
-  cursor: pointer;
-}
-
 /* ---- Song rows (Music > Albums tab, Song view mode) ---- */
 .mode-toggle {
   display: flex;
