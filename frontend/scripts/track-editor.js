@@ -1,10 +1,14 @@
-// Shared track detail-fields editor — title, alternative title, link,
-// duration, credits, lyrics, tags, star/favourite, thoughts. Used both
-// nested inline inside an album's track list (music.js's expandable row)
-// and as Song View's detail pane (song-view.js) — same fields either way,
-// since starring/tagging a track from one place must show up correctly in
-// the other. Callers own everything outside these fields — music.js's
-// drag-to-reorder and delete button; song-view.js's "Part of: Album" link.
+// Shared track-field editors, both used from music.js:
+// - createTrackFieldsEditor: the full editor (title, alternative title,
+//   link, duration, credits, lyrics, tags, thoughts) nested inline inside
+//   an album's track list (buildTrackElement's expandable row).
+// - createSongRowExpandBody: the reduced editor (tags + thoughts only) used
+//   by Song View's rows (renderSongRow) — Song View is a lighter
+//   browse/tag/thought surface, not a full editor. Star lives on the
+//   collapsed row in both contexts (music.js), not in either editor here;
+//   favourite isn't editable from any per-track UI, only the sidebar
+//   Favourites panel. Tags/thoughts editing behavior is shared via
+//   renderTagsSection/renderThoughtsSection so the two surfaces can't drift.
 
 // Every full-track PUT must resend every field TrackIn knows about, or the
 // API silently resets whatever's omitted back to its default — this
@@ -38,6 +42,23 @@ function putTrack(albumId, track) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(trackToPayload(track)),
   });
+}
+
+/** Toggles track.starred in place, cascading the favorite<->starred
+ * invariant client-side (mirrors app/routers/music.py's _normalize_track,
+ * so the UI never shows a contradictory state before a PUT resolves).
+ * Unstarring must also un-favourite — favourite is a strict subset of
+ * starred, so a track can't stay on the home lane once it leaves Song View. */
+function toggleTrackStarred(track) {
+  track.starred = !track.starred;
+  if (!track.starred) track.favorite = false;
+}
+
+/** Sets track.favorite in place, cascading the same invariant the other
+ * direction — favouriting implies starred. */
+function applyTrackFavorite(track, value) {
+  track.favorite = value;
+  if (value) track.starred = true;
 }
 
 /**

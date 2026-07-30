@@ -121,8 +121,7 @@
     starEl.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      t.starred = !t.starred;
-      if (!t.starred) t.favorite = false; // unstarring must also un-favourite
+      toggleTrackStarred(t);
       await putTrack(t.album_id, t);
       await loadSongs(); // refresh — an unstarred track drops out of this list
       favoritesPanel.refresh();
@@ -241,8 +240,7 @@
     const album = await fetch(`/api/music/${albumId}`).then((r) => r.json());
     const track = album.tracks.find((t) => t.id === trackId);
     if (!track) return;
-    track.favorite = value;
-    if (value) track.starred = true; // favorite implies starred
+    applyTrackFavorite(track, value);
     await putTrack(albumId, track);
   }
 
@@ -425,8 +423,7 @@
     trackStarEl.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      track.starred = !track.starred;
-      if (!track.starred) track.favorite = false; // unstarring must also un-favourite
+      toggleTrackStarred(track);
       trackStarEl.textContent = track.starred ? "★" : "☆";
       trackStarEl.classList.toggle("active", !!track.starred);
       await putTrack(albumId, track);
