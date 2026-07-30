@@ -35,7 +35,17 @@ def _normalize_track(track: TrackIn) -> TrackIn:
     be a strictly narrower set than Song View membership. The two flags can
     arrive independently (e.g. favoriting from the Albums favourites panel
     doesn't know about `starred`), so this is enforced on write rather than
-    trusting every caller to set both."""
+    trusting every caller to set both.
+
+    Deliberately one-directional: given a self-contradictory payload
+    (favorite=True, starred=False — which the app's own client never sends,
+    since every star/favorite toggle resends a consistent pair), this
+    always resolves toward promoting starred rather than demoting favorite.
+    The wire format can't distinguish "starred omitted, defaulted false"
+    from "starred explicitly cleared" (TrackIn has no way to tell), so
+    trying to also cascade starred=False -> favorite=False here would
+    silently break this exact promotion for that same ambiguous input —
+    see 2026-07-30 code review notes."""
     if track.favorite and not track.starred:
         track.starred = True
     return track

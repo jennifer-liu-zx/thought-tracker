@@ -87,6 +87,48 @@ def test_starring_a_track_without_favoriting_it(client):
     assert res.json()["favorite"] is False
 
 
+def test_unstarring_a_track_also_unfavorites_it(client):
+    """The real unstar flow (both star-toggle handlers in music.js) always
+    sends starred=False and favorite=False together in one payload — there's
+    no ambiguity for the server to resolve here, since both fields already
+    agree by the time the request is sent."""
+    album = _create_album(client)
+    track = _create_track(client, album["id"])
+    client.put(
+        f"/api/music/{album['id']}/tracks/{track['id']}",
+        json={"track_number": 1, "title": "Opening Track", "favorite": True},
+    )
+
+    res = client.put(
+        f"/api/music/{album['id']}/tracks/{track['id']}",
+        json={"track_number": 1, "title": "Opening Track", "starred": False, "favorite": False},
+    )
+    assert res.status_code == 200
+    assert res.json()["starred"] is False
+    assert res.json()["favorite"] is False
+
+
+def test_contradictory_payload_resolves_by_promoting_starred(client):
+    """Deliberate, documented tie-break: TrackIn can't distinguish "starred
+    omitted, defaulted False" from "starred explicitly False" on the wire,
+    so a self-contradictory payload (starred=False, favorite=True) — which
+    the app's own client never actually sends — resolves by promoting
+    starred rather than demoting favorite. This is the same input shape
+    test_favoriting_a_track_also_stars_it relies on; the two cannot be told
+    apart, so this test exists to make the choice explicit rather than
+    accidental."""
+    album = _create_album(client)
+    track = _create_track(client, album["id"])
+
+    res = client.put(
+        f"/api/music/{album['id']}/tracks/{track['id']}",
+        json={"track_number": 1, "title": "Opening Track", "starred": False, "favorite": True},
+    )
+    assert res.status_code == 200
+    assert res.json()["starred"] is True
+    assert res.json()["favorite"] is True
+
+
 def test_track_tags_roundtrip(client):
     album = _create_album(client)
     track = _create_track(client, album["id"])
