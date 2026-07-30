@@ -418,8 +418,20 @@
     details.dataset.trackId = track.id;
 
     const summary = document.createElement("summary");
-    summary.innerHTML = `<span class="drag-handle" draggable="true" title="Drag to reorder">⠿</span><span class="ep-num">${String(track.track_number).padStart(2, "0")}</span><span class="ep-name">${escapeHtml(pickDisplayTitle(track)) || "(untitled)"}</span>`;
+    summary.innerHTML = `<span class="drag-handle" draggable="true" title="Drag to reorder">⠿</span><span class="ep-num">${String(track.track_number).padStart(2, "0")}</span><span class="ep-name">${escapeHtml(pickDisplayTitle(track)) || "(untitled)"}</span><span class="song-item-star ${track.starred ? "active" : ""}" role="button" aria-label="Toggle star">${track.starred ? "★" : "☆"}</span>`;
     details.appendChild(summary);
+
+    const trackStarEl = summary.querySelector(".song-item-star");
+    trackStarEl.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      track.starred = !track.starred;
+      if (!track.starred) track.favorite = false; // unstarring must also un-favourite
+      trackStarEl.textContent = track.starred ? "★" : "☆";
+      trackStarEl.classList.toggle("active", !!track.starred);
+      await putTrack(albumId, track);
+      favoritesPanel.refresh();
+    });
 
     const dragHandle = summary.querySelector(".drag-handle");
     dragHandle.addEventListener("click", (e) => e.preventDefault());
