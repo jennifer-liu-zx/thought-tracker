@@ -685,9 +685,9 @@ function createCollectionView({
       return;
     }
     paginationEl.innerHTML = `
-      <button type="button" class="pagination-prev" ${state.page === 0 ? "disabled" : ""}>&larr; Prev</button>
+      <button type="button" class="pagination-prev" aria-label="Previous page" ${state.page === 0 ? "disabled" : ""}>&larr;</button>
       <span class="pagination-label">Page ${state.page + 1} of ${totalPages}</span>
-      <button type="button" class="pagination-next" ${state.page >= totalPages - 1 ? "disabled" : ""}>Next &rarr;</button>
+      <button type="button" class="pagination-next" aria-label="Next page" ${state.page >= totalPages - 1 ? "disabled" : ""}>&rarr;</button>
     `;
     paginationEl.querySelector(".pagination-prev").addEventListener("click", () => {
       state.page = Math.max(0, state.page - 1);

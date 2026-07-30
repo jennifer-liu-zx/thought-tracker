@@ -493,6 +493,25 @@
   color: var(--color-text-faint);
 }
 
+.pagination-prev,
+.pagination-next {
+  font-family: inherit;
+  font-size: 0.75rem;
+  letter-spacing: var(--letter-spacing-wide);
+  background: none;
+  border: 1px solid var(--color-border-input);
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  border-radius: var(--radius);
+}
+
+.pagination-prev:disabled,
+.pagination-next:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 /* ---- Song rows (Music > Albums tab, Song view mode) ---- */
 .mode-toggle {
   display: flex;

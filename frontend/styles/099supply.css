@@ -235,6 +235,22 @@ main {
   border-color: var(--sup-ink);
 }
 
+.pagination-prev,
+.pagination-next {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  border: 1px solid var(--sup-border);
+  border-radius: 9999px;
+  color: var(--sup-muted);
+  background: var(--sup-white);
+}
+
+.pagination-prev:hover:not(:disabled),
+.pagination-next:hover:not(:disabled) {
+  border-color: var(--sup-muted-soft);
+  color: var(--sup-ink);
+}
+
 /* Primary Button */
 .new-entry-btn {
   font-size: 0.75rem;
