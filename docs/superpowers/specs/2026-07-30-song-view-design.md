@@ -1,7 +1,23 @@
 # Song View — design spec
 
 Date: 2026-07-30
-Status: approved, moving to implementation
+Status: superseded — see note below
+
+> **Superseded 2026-07-30 (same day).** This spec describes Song View as a
+> standalone subnav tab/page under Music, with its own browse list and a
+> separate browse→detail pane (full track editor: title, link, credits,
+> lyrics, tags, thoughts, star, favourite). After this was fully built, the
+> user asked for a redesign via conversation (not written up as a new spec
+> doc): Song View became a mode toggle ("Album View" / "Song View") inside
+> the existing Albums tab, not a separate page; song rows expand inline
+> (like the album view's per-track `<details>` rows) to a **reduced** editor
+> (tags + thoughts only, not the full field set); the star toggle lives on
+> the collapsed row in both Album View and Song View; and favourite is no
+> longer controllable from any per-track UI at all — only via the sidebar
+> Favourites panel. The underlying data model (starred/tags fields, the
+> favorite⇒starred invariant, the backfill script) is unchanged and still
+> accurately described below. See `frontend/scripts/music.js` and
+> `frontend/scripts/track-editor.js` for what actually shipped.
 
 ## Problem
 
