@@ -85,7 +85,7 @@ diary/
       home.css                 # home page swimlanes
       calendar.css             # today-card + month-grid modal (structural rules)
       099supply.css            # site-wide visual theme — overrides all of the above;
-                                # see DESIGN/099Supply_DESIGN.md for the underlying system
+                                # see DESIGN.md for the underlying system
     scripts/
       app.js                   # routing between the 5 top-level sections
       shelf.js                 # shared factories: collection view, favourites panel, star
@@ -141,7 +141,7 @@ diary/
   for consistency, and should be added to `app/routers/calendar.py`'s `_iter_thought_sources()`
   so their thoughts show up in the home page calendar.
 - The 099 Supply visual system (`frontend/styles/099supply.css`, spec in
-  `DESIGN/099Supply_DESIGN.md`) applies site-wide — new UI should extend it rather than
+  `DESIGN.md`) applies site-wide — new UI should extend it rather than
   introducing a different look.
 
 ## Recommended skills for this repo

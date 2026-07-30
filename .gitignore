@@ -21,13 +21,5 @@ media/*
 .claude/skills/
 skills-lock.json
 
-# Design-exploration byproducts from other (unadopted) style directions.
-# DESIGN/099Supply_DESIGN.md is kept — CLAUDE.md references it as the spec
-# for the theme actually in use.
-/DESIGN.md
-DESIGN/FlyingPapers_DESIGN.md
-DESIGN/Letterboxd_DESIGN.md
-DESIGN/Yellowbird_DESIGN.md
-
 # Personal UI reference recording, not app code.
 ui_references/
