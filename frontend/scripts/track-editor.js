@@ -135,8 +135,6 @@ function createTrackFieldsEditor({ container, albumId, track, onSaved }) {
     </div>
     <input type="text" class="track-title-input" placeholder="Track title" hidden />
 
-    <div class="track-tags-slot"></div>
-
     <div class="mini-section">
       <div class="field">
         <label>Alternative title</label>
@@ -147,6 +145,8 @@ function createTrackFieldsEditor({ container, albumId, track, onSaved }) {
         Show alternative title
       </label>
     </div>
+
+    <div class="track-tags-slot"></div>
 
     <div class="mini-section">
       <h4>Link</h4>
