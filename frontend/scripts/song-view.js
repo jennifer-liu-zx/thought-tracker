@@ -13,12 +13,53 @@
   let allTracks = []; // every track across every album, from GET /api/music/tracks
   let addPanelOpen = false;
 
+  // TEMPORARY — Task 10 real-theme visual check only. This whole file gets
+  // replaced by the Album/Song toggle inside music.js (Task 11) and deleted
+  // in Task 13; renderSongRow will move there.
+  function renderSongRow(item) {
+    const t = item.track;
+    const details = document.createElement("details");
+    details.className = "song-item";
+    const summary = document.createElement("summary");
+    const visibleTags = (t.tags || []).slice(0, 2);
+    const extraCount = (t.tags || []).length - visibleTags.length;
+    summary.innerHTML = `
+      <div class="cover">${buildCoverHtml(item)}</div>
+      <div class="song-item-info">
+        <div class="song-item-title">${escapeHtml(item.title)}</div>
+        <div class="song-item-subtitle">${escapeHtml(item.subtitle || "")}</div>
+      </div>
+      <span class="song-item-album-link">${escapeHtml(t.album_title)}</span>
+      <div class="song-item-tags">
+        ${visibleTags.map((tag) => `<span class="chip">${escapeHtml(tag)}</span>`).join("")}
+        ${extraCount > 0 ? `<span class="song-item-tags-more">+${extraCount} more</span>` : ""}
+      </div>
+      <span class="song-item-star ${t.starred ? "active" : ""}">${t.starred ? "★" : "☆"}</span>
+    `;
+    details.appendChild(summary);
+
+    const body = document.createElement("div");
+    body.className = "song-item-body";
+    details.appendChild(body);
+    let bodyBuilt = false;
+    details.addEventListener("toggle", () => {
+      if (details.open && !bodyBuilt) {
+        bodyBuilt = true;
+        createSongRowExpandBody({ container: body, albumId: t.album_id, track: t, onSaved: () => {} });
+      }
+    });
+
+    return details;
+  }
+
   const collectionView = createCollectionView({
     container: collectionEl,
     storageKey: "song-view",
-    onSelect: selectSong,
+    onSelect: () => {},
     coverAspect: "square",
     pageSize: 40,
+    forceView: "list",
+    renderItem: renderSongRow,
   });
 
   async function loadTracks() {
@@ -29,10 +70,11 @@
         .map((t) => ({
           id: packTrackId(t.album_id, t.id),
           title: pickDisplayTitle(t),
-          subtitle: `${t.album_artist} — ${t.album_title}`,
+          subtitle: t.album_artist,
           cover: t.album_cover,
           tags: t.tags || [],
           keywords: [...(t.tags || []), t.english_title, t.album_title].join(" "),
+          track: t,
         }))
     );
   }

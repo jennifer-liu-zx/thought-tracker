@@ -41,14 +41,91 @@ function putTrack(albumId, track) {
 }
 
 /**
+ * Renders just the tags chip-editor into `container` — shared by the full
+ * album-view editor and Song View's reduced expand, so the two surfaces
+ * never drift on how tag editing behaves.
+ */
+function renderTagsSection({ container, track, saveTrack }) {
+  container.innerHTML = `
+    <div class="mini-section track-tags-section">
+      <h4>Tags</h4>
+      <div class="chip-list track-tags-list"></div>
+      <div class="add-row">
+        <input type="text" class="track-new-tag-text" placeholder="Add a tag..." />
+        <button type="button" class="track-add-tag-btn">+ Add tag</button>
+      </div>
+    </div>
+  `;
+
+  createChipListEditor({
+    container: container.querySelector(".track-tags-list"),
+    getItems: () => track.tags || (track.tags = []),
+    textInput: container.querySelector(".track-new-tag-text"),
+    addBtn: container.querySelector(".track-add-tag-btn"),
+    onChange: saveTrack,
+  });
+}
+
+/**
+ * Renders just the thoughts editor into `container` — shared the same way
+ * as renderTagsSection. `scrollable` wraps the thoughts list in a
+ * max-height scroll box (Song View's rows, so a long thought history
+ * doesn't blow out a dense list; the full album-view editor doesn't need
+ * this since it's already a dedicated per-track page section).
+ */
+function renderThoughtsSection({ container, track, saveTrack, scrollable }) {
+  container.innerHTML = `
+    <div class="mini-section">
+      <h4>Thoughts</h4>
+      <div class="${scrollable ? "thoughts-scroll " : ""}thoughts-list track-thoughts"></div>
+      <div class="add-row">
+        <input type="date" class="track-new-thought-date" />
+        <textarea class="thought-textarea track-new-thought-text" placeholder="New thought..." rows="2"></textarea>
+        <button type="button" class="track-add-thought-btn">+ Add thought</button>
+      </div>
+    </div>
+  `;
+
+  createThoughtsEditor({
+    container: container.querySelector(".track-thoughts"),
+    getThoughts: () => track.thoughts,
+    dateInput: container.querySelector(".track-new-thought-date"),
+    textInput: container.querySelector(".track-new-thought-text"),
+    addBtn: container.querySelector(".track-add-thought-btn"),
+    onChange: saveTrack,
+  });
+}
+
+/**
+ * Song View's reduced expand — tags + thoughts only. Credits, lyrics, the
+ * link/duration fields, and the title stay album-view-only edits; Song
+ * View is a lighter browse/tag/thought surface, not a full editor.
+ */
+function createSongRowExpandBody({ container, albumId, track, onSaved }) {
+  async function saveTrack() {
+    await putTrack(albumId, track);
+    onSaved?.();
+  }
+
+  container.innerHTML = `<div class="song-tags-slot"></div><div class="song-thoughts-slot"></div>`;
+  renderTagsSection({ container: container.querySelector(".song-tags-slot"), track, saveTrack });
+  renderThoughtsSection({
+    container: container.querySelector(".song-thoughts-slot"),
+    track,
+    saveTrack,
+    scrollable: true,
+  });
+}
+
+/**
  * Renders the shared track fields UI into `container` (an element the
  * caller already appended somewhere). `track` is a mutable TrackOut-shaped
  * object — this editor reads/writes its properties directly, same pattern
  * as the rest of this app's detail forms.
  *
- * onSaved (optional): fires after any successful save (title edit, full
- * save, or a star/favourite toggle) — callers use this to refresh whatever
- * summary/list display shows this track's title or flags elsewhere.
+ * onSaved (optional): fires after any successful save (title edit or full
+ * save) — callers use this to refresh whatever summary display shows this
+ * track's title elsewhere.
  */
 function createTrackFieldsEditor({ container, albumId, track, onSaved }) {
   container.innerHTML = `
@@ -58,19 +135,7 @@ function createTrackFieldsEditor({ container, albumId, track, onSaved }) {
     </div>
     <input type="text" class="track-title-input" placeholder="Track title" hidden />
 
-    <div class="track-flags-row">
-      <button type="button" class="track-star-btn"></button>
-      <button type="button" class="track-favorite-btn"></button>
-    </div>
-
-    <div class="mini-section track-tags-section">
-      <h4>Tags</h4>
-      <div class="chip-list track-tags-list"></div>
-      <div class="add-row">
-        <input type="text" class="track-new-tag-text" placeholder="Add a tag..." />
-        <button type="button" class="track-add-tag-btn">+ Add tag</button>
-      </div>
-    </div>
+    <div class="track-tags-slot"></div>
 
     <div class="mini-section">
       <div class="field">
@@ -130,15 +195,7 @@ function createTrackFieldsEditor({ container, albumId, track, onSaved }) {
       <button type="button" class="track-save-btn">Save</button>
     </div>
 
-    <div class="mini-section">
-      <h4>Thoughts</h4>
-      <div class="thoughts-list track-thoughts"></div>
-      <div class="add-row">
-        <input type="date" class="track-new-thought-date" />
-        <textarea class="thought-textarea track-new-thought-text" placeholder="New thought..." rows="2"></textarea>
-        <button type="button" class="track-add-thought-btn">+ Add thought</button>
-      </div>
-    </div>
+    <div class="track-thoughts-slot"></div>
   `;
 
   const titleView = container.querySelector(".track-title-view");
@@ -153,47 +210,11 @@ function createTrackFieldsEditor({ container, albumId, track, onSaved }) {
     titleInput.focus();
   });
 
-  const starBtn = container.querySelector(".track-star-btn");
-  const favoriteBtn = container.querySelector(".track-favorite-btn");
-
-  function renderFlags() {
-    starBtn.textContent = track.starred ? "★ Starred" : "☆ Star";
-    starBtn.classList.toggle("active", !!track.starred);
-    favoriteBtn.textContent = track.favorite ? "♥ Favourite" : "♡ Favourite";
-    favoriteBtn.classList.toggle("active", !!track.favorite);
-  }
-  renderFlags();
-
   async function saveTrack() {
     await putTrack(albumId, track);
   }
 
-  starBtn.addEventListener("click", async () => {
-    track.starred = !track.starred;
-    // Unstarring must also un-favourite — favourite is a strict subset of
-    // starred, so a track can't stay on the home lane once it leaves Song View.
-    if (!track.starred) track.favorite = false;
-    renderFlags();
-    await saveTrack();
-    onSaved?.();
-  });
-
-  favoriteBtn.addEventListener("click", async () => {
-    track.favorite = !track.favorite;
-    // Favouriting implies starred — mirrors the invariant app/routers/music.py enforces.
-    if (track.favorite) track.starred = true;
-    renderFlags();
-    await saveTrack();
-    onSaved?.();
-  });
-
-  const tagsEditor = createChipListEditor({
-    container: container.querySelector(".track-tags-list"),
-    getItems: () => track.tags || (track.tags = []),
-    textInput: container.querySelector(".track-new-tag-text"),
-    addBtn: container.querySelector(".track-add-tag-btn"),
-    onChange: saveTrack,
-  });
+  renderTagsSection({ container: container.querySelector(".track-tags-slot"), track, saveTrack });
 
   const englishTitleInput = container.querySelector(".track-english-title");
   const showEnglishTitleCheckbox = container.querySelector(".track-show-english-title");
@@ -221,10 +242,6 @@ function createTrackFieldsEditor({ container, albumId, track, onSaved }) {
   const uploadInput = container.querySelector('input[type="file"]');
   const fetchLyricsBtn = container.querySelector(".fetch-lyrics-btn");
   const trackSaveBtn = container.querySelector(".track-save-btn");
-  const trackThoughtsEl = container.querySelector(".track-thoughts");
-  const newTrackThoughtDateEl = container.querySelector(".track-new-thought-date");
-  const newTrackThoughtTextEl = container.querySelector(".track-new-thought-text");
-  const addTrackThoughtBtn = container.querySelector(".track-add-thought-btn");
 
   uploadInput.addEventListener("change", () => {
     const file = uploadInput.files[0];
@@ -280,12 +297,5 @@ function createTrackFieldsEditor({ container, albumId, track, onSaved }) {
     onSaved?.();
   });
 
-  createThoughtsEditor({
-    container: trackThoughtsEl,
-    getThoughts: () => track.thoughts,
-    dateInput: newTrackThoughtDateEl,
-    textInput: newTrackThoughtTextEl,
-    addBtn: addTrackThoughtBtn,
-    onChange: saveTrack,
-  });
+  renderThoughtsSection({ container: container.querySelector(".track-thoughts-slot"), track, saveTrack });
 }

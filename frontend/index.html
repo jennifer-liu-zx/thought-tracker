@@ -478,10 +478,28 @@
       <div id="music-browse">
         <div class="browse-layout">
           <div class="browse-main">
-            <div class="browse-actions">
-              <button type="button" id="add-album-btn" class="new-entry-btn">+ Add Album</button>
+            <div class="mode-toggle">
+              <button type="button" class="mode-toggle-btn active" data-mode="album">Album View</button>
+              <button type="button" class="mode-toggle-btn" data-mode="song">Song View</button>
             </div>
-            <div id="music-collection"></div>
+
+            <div id="music-album-mode">
+              <div class="browse-actions">
+                <button type="button" id="add-album-btn" class="new-entry-btn">+ Add Album</button>
+              </div>
+              <div id="music-collection"></div>
+            </div>
+
+            <div id="music-song-mode" hidden>
+              <div class="browse-actions">
+                <button type="button" id="add-song-btn" class="new-entry-btn">+ Add Song</button>
+              </div>
+              <div id="song-add-panel" class="search-panel" hidden>
+                <input type="search" id="song-add-search" placeholder="Search all songs by title, artist, or album..." />
+                <div id="song-add-results" class="search-results"></div>
+              </div>
+              <div id="music-songs-collection"></div>
+            </div>
           </div>
           <aside id="music-favorites" class="favorites-panel"></aside>
         </div>

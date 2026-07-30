@@ -503,3 +503,117 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* ---- Song rows (Music > Albums tab, Song view mode) ---- */
+.mode-toggle {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.mode-toggle-btn {
+  font-family: inherit;
+  font-size: 0.75rem;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  background: none;
+  border: 1px solid var(--color-border-input);
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  border-radius: var(--radius);
+}
+
+.mode-toggle-btn.active {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  border-color: var(--color-accent);
+}
+
+.song-item {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.song-item > summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 0.25rem;
+  list-style: none;
+}
+
+.song-item > summary::-webkit-details-marker {
+  display: none;
+}
+
+.song-item > summary .cover {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  background: var(--color-bg-hover);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.song-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.song-item-title {
+  font-family: var(--font-serif);
+}
+
+.song-item-subtitle {
+  font-size: 0.8rem;
+  color: var(--color-text-faint);
+}
+
+.song-item-album-link {
+  font-size: 0.8rem;
+  color: var(--color-text-faint);
+  text-decoration: underline;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: 1.25rem;
+}
+
+.song-item-tags {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  margin-left: 1.25rem;
+}
+
+.song-item-tags-more {
+  font-size: 0.75rem;
+  color: var(--color-text-faint);
+}
+
+.song-item-star {
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: 0.4rem;
+  color: var(--color-text-faint);
+}
+
+.song-item-star.active {
+  color: var(--color-accent);
+}
+
+.song-item-body {
+  padding: 0.5rem 0.25rem 1rem 4.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.thoughts-scroll {
+  max-height: 160px;
+  overflow-y: auto;
+}

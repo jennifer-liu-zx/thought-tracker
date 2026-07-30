@@ -219,6 +219,22 @@ main {
   border-color: var(--sup-ink);
 }
 
+.mode-toggle-btn {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--sup-border);
+  border-radius: 9999px;
+  color: var(--sup-muted);
+  background: var(--sup-white);
+}
+
+.mode-toggle-btn.active {
+  background: var(--sup-ink);
+  color: var(--sup-white);
+  border-color: var(--sup-ink);
+}
+
 /* Primary Button */
 .new-entry-btn {
   font-size: 0.75rem;
@@ -431,10 +447,18 @@ main {
   background: var(--sup-white);
 }
 
-/* External-search autofill (TMDb, Open Library) — same treatment as the
-   favourites search box */
+/* Same "card surface" as .collection-toolbar — every autofill search box
+ * (TMDb/Open Library/MusicBrainz/"search all songs") reads as one family. */
+.search-panel {
+  background: var(--sup-white);
+  border: 1px solid var(--sup-border);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+}
+
 .search-panel input[type="search"] {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
   border: 1px solid var(--sup-border);
   border-radius: 4px;
   background: var(--sup-white);
@@ -480,7 +504,10 @@ main {
 .detail-pane input[type="text"],
 .detail-pane input[type="number"],
 .detail-pane input[type="date"],
-.detail-pane .custom-select-btn {
+.detail-pane .custom-select-btn,
+.song-item-body input[type="text"],
+.song-item-body input[type="number"],
+.song-item-body input[type="date"] {
   font-size: 0.85rem;
   border: 1px solid var(--sup-border);
   border-radius: 4px;
@@ -496,7 +523,8 @@ input[type="date"] {
   color: var(--sup-muted-soft) !important;
 }
 
-.detail-pane textarea {
+.detail-pane textarea,
+.song-item-body textarea {
   font-size: 0.85rem;
   line-height: 1.5;
   border: 1px solid var(--sup-border);
@@ -506,13 +534,17 @@ input[type="date"] {
 
 .detail-pane input:hover,
 .detail-pane .custom-select-btn:hover,
-.detail-pane textarea:hover {
+.detail-pane textarea:hover,
+.song-item-body input:hover,
+.song-item-body textarea:hover {
   border-color: var(--sup-muted-soft);
 }
 
 .detail-pane input:focus,
 .detail-pane .custom-select-btn:focus,
-.detail-pane textarea:focus {
+.detail-pane textarea:focus,
+.song-item-body input:focus,
+.song-item-body textarea:focus {
   outline: none;
   border-color: var(--sup-ink);
 }

@@ -21,10 +21,29 @@
   border-radius: var(--radius);
 }
 
+/* Same "card surface" treatment as .collection-toolbar, so every autofill
+ * search box (TMDb/Open Library/MusicBrainz/"search all songs") reads as
+ * one consistent search-box family across the app. */
 .search-panel {
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border-input);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
   margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--color-border);
+}
+
+.search-panel input[type="search"] {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius);
+}
+
+.search-panel input[type="search"]:focus {
+  outline: none;
+  border-color: var(--color-accent);
 }
 
 .search-results {
@@ -220,7 +239,11 @@
 .detail-pane input[type="number"],
 .detail-pane input[type="date"],
 .detail-pane .custom-select-btn,
-.detail-pane textarea {
+.detail-pane textarea,
+.song-item-body input[type="text"],
+.song-item-body input[type="number"],
+.song-item-body input[type="date"],
+.song-item-body textarea {
   font-family: inherit;
   font-size: 0.9rem;
   padding: 0.5rem;
@@ -231,12 +254,15 @@
 
 .detail-pane input:focus,
 .detail-pane .custom-select-btn:focus,
-.detail-pane textarea:focus {
+.detail-pane textarea:focus,
+.song-item-body input:focus,
+.song-item-body textarea:focus {
   outline: none;
   border-color: var(--color-accent);
 }
 
-.detail-pane textarea {
+.detail-pane textarea,
+.song-item-body textarea {
   font-family: var(--font-serif);
   line-height: 1.6;
   resize: vertical;

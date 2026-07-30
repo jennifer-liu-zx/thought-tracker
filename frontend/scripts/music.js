@@ -5,6 +5,15 @@
   const backBtn = document.getElementById("music-back-btn");
   const collectionEl = document.getElementById("music-collection");
 
+  const modeToggleBtns = document.querySelectorAll("#music-browse .mode-toggle-btn");
+  const albumModeEl = document.getElementById("music-album-mode");
+  const songModeEl = document.getElementById("music-song-mode");
+  const songsCollectionEl = document.getElementById("music-songs-collection");
+  const addSongBtn = document.getElementById("add-song-btn");
+  const songAddPanel = document.getElementById("song-add-panel");
+  const songAddSearchInput = document.getElementById("song-add-search");
+  const songAddResultsEl = document.getElementById("song-add-results");
+
   const searchPanel = document.getElementById("album-search-panel");
   const searchInput = document.getElementById("album-search-input");
   const searchResultsEl = document.getElementById("album-search-results");
@@ -57,6 +66,8 @@
   let currentTracks = [];
   let draggingTrackId = null;
   let searchDebounce = null;
+  let mode = localStorage.getItem("music-mode") === "song" ? "song" : "album";
+  let allTracks = []; // every track across every album, from GET /api/music/tracks — Song view mode's data
 
   const collectionView = createCollectionView({
     container: collectionEl,
@@ -68,6 +79,159 @@
       { value: "title-desc", label: "Title (Z–A)", cmp: (a, b) => b.title.localeCompare(a.title) },
       { value: "artist-asc", label: "Artist (A–Z)", cmp: (a, b) => (a.artist || "").localeCompare(b.artist || "") },
     ],
+  });
+
+  // ---- Song view mode ----
+
+  function renderSongRow(item) {
+    const t = item.track;
+    const details = document.createElement("details");
+    details.className = "song-item";
+
+    const summary = document.createElement("summary");
+    const visibleTags = (t.tags || []).slice(0, 2);
+    const extraCount = (t.tags || []).length - visibleTags.length;
+    summary.innerHTML = `
+      <div class="cover">${buildCoverHtml(item)}</div>
+      <div class="song-item-info">
+        <div class="song-item-title">${escapeHtml(item.title)}</div>
+        <div class="song-item-subtitle">${escapeHtml(item.subtitle || "")}</div>
+      </div>
+      <span class="song-item-album-link">${escapeHtml(t.album_title)}</span>
+      <div class="song-item-tags">
+        ${visibleTags.map((tag) => `<span class="chip">${escapeHtml(tag)}</span>`).join("")}
+        ${extraCount > 0 ? `<span class="song-item-tags-more">+${extraCount} more</span>` : ""}
+      </div>
+      <span class="song-item-star ${t.starred ? "active" : ""}" role="button" aria-label="Toggle star">${t.starred ? "★" : "☆"}</span>
+    `;
+    details.appendChild(summary);
+
+    // Clicks inside <summary> toggle the native details open/close by
+    // default — preventDefault stops that so the star/album-link act
+    // independently of expanding the row.
+    const albumLink = summary.querySelector(".song-item-album-link");
+    albumLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setMode("album");
+      window.Diary.music.openTrack(t.album_id, t.id);
+    });
+
+    const starEl = summary.querySelector(".song-item-star");
+    starEl.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      t.starred = !t.starred;
+      if (!t.starred) t.favorite = false; // unstarring must also un-favourite
+      await putTrack(t.album_id, t);
+      await loadSongs(); // refresh — an unstarred track drops out of this list
+      favoritesPanel.refresh();
+    });
+
+    const body = document.createElement("div");
+    body.className = "song-item-body";
+    details.appendChild(body);
+
+    // Lazily build the reduced tags+thoughts editor only on first expand,
+    // so rows nobody opens don't pay for wiring two editors each.
+    let bodyBuilt = false;
+    details.addEventListener("toggle", () => {
+      if (details.open && !bodyBuilt) {
+        bodyBuilt = true;
+        createSongRowExpandBody({
+          container: body,
+          albumId: t.album_id,
+          track: t,
+          onSaved: () => {
+            summary.querySelector(".song-item-tags").innerHTML = (() => {
+              const visible = (t.tags || []).slice(0, 2);
+              const extra = (t.tags || []).length - visible.length;
+              return `${visible.map((tag) => `<span class="chip">${escapeHtml(tag)}</span>`).join("")}${
+                extra > 0 ? `<span class="song-item-tags-more">+${extra} more</span>` : ""
+              }`;
+            })();
+          },
+        });
+      }
+    });
+
+    enableSmoothDetails(details);
+    return details;
+  }
+
+  const songsCollectionView = createCollectionView({
+    container: songsCollectionEl,
+    storageKey: "music-songs",
+    onSelect: () => {},
+    coverAspect: "square",
+    pageSize: 40,
+    forceView: "list",
+    renderItem: renderSongRow,
+  });
+
+  async function loadSongs() {
+    allTracks = await fetch("/api/music/tracks").then((r) => r.json());
+    songsCollectionView.setItems(
+      allTracks
+        .filter((t) => t.starred)
+        .map((t) => ({
+          id: packTrackId(t.album_id, t.id),
+          title: pickDisplayTitle(t),
+          subtitle: t.album_artist,
+          cover: t.album_cover,
+          tags: t.tags || [],
+          keywords: [...(t.tags || []), t.english_title, t.album_title].join(" "),
+          track: t,
+        }))
+    );
+  }
+
+  function setMode(next) {
+    mode = next;
+    localStorage.setItem("music-mode", mode);
+    albumModeEl.hidden = mode !== "album";
+    songModeEl.hidden = mode !== "song";
+    modeToggleBtns.forEach((btn) => btn.classList.toggle("active", btn.dataset.mode === mode));
+    if (mode === "album") loadAlbums();
+    else loadSongs();
+  }
+
+  modeToggleBtns.forEach((btn) => {
+    btn.addEventListener("click", () => setMode(btn.dataset.mode));
+  });
+
+  addSongBtn.addEventListener("click", () => {
+    const willOpen = songAddPanel.hidden;
+    songAddPanel.hidden = !willOpen;
+    songAddResultsEl.innerHTML = "";
+    songAddSearchInput.value = "";
+    if (willOpen) songAddSearchInput.focus();
+  });
+
+  songAddSearchInput.addEventListener("input", () => {
+    const q = songAddSearchInput.value.trim().toLowerCase();
+    songAddResultsEl.innerHTML = "";
+    if (!q) return;
+    const matches = allTracks
+      .filter(
+        (t) => !t.starred && `${t.title} ${t.album_artist} ${t.album_title}`.toLowerCase().includes(q)
+      )
+      .slice(0, 8);
+    for (const t of matches) {
+      const row = document.createElement("div");
+      row.className = "search-result";
+      row.textContent = `${pickDisplayTitle(t)} — ${t.album_artist} (${t.album_title})`;
+      row.addEventListener("click", async () => {
+        const album = await fetch(`/api/music/${t.album_id}`).then((r) => r.json());
+        const track = album.tracks.find((tr) => tr.id === t.id);
+        if (!track) return;
+        track.starred = true;
+        await putTrack(t.album_id, track);
+        songAddPanel.hidden = true;
+        await loadSongs();
+      });
+      songAddResultsEl.appendChild(row);
+    }
   });
 
   const RELEASE_TYPE_LABELS = { ep: "EP", single: "Single", live: "Live" };
@@ -534,7 +698,8 @@
   window.Diary.music = {
     showBrowse: () => {
       showBrowse();
-      loadAlbums();
+      if (mode === "album") loadAlbums();
+      else loadSongs();
       favoritesPanel.refresh();
     },
     openItem: (id) => selectAlbum(id),
@@ -542,5 +707,14 @@
     isDirty: () => isDirty(),
   };
 
-  loadAlbums();
+  // Reflect whatever mode was persisted from a previous visit before the
+  // initial load — setMode() itself would also flip modeToggleBtns'
+  // active class and re-fetch, which is redundant with the loadAlbums()
+  // call below on a fresh page load, so just sync the hidden/active state here.
+  albumModeEl.hidden = mode !== "album";
+  songModeEl.hidden = mode !== "song";
+  modeToggleBtns.forEach((btn) => btn.classList.toggle("active", btn.dataset.mode === mode));
+
+  if (mode === "album") loadAlbums();
+  else loadSongs();
 })();

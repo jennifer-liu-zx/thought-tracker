@@ -455,7 +455,16 @@ const DEFAULT_SORT_OPTIONS = [
  * coverAspect (optional): "portrait" (default, 2:3 — books/movies/shows), "square" (albums),
  * or "landscape" (16:9 — Live & Covers video thumbnails).
  */
-function createCollectionView({ container, storageKey, onSelect, sortOptions, coverAspect, pageSize }) {
+function createCollectionView({
+  container,
+  storageKey,
+  onSelect,
+  sortOptions,
+  coverAspect,
+  pageSize,
+  renderItem,
+  forceView,
+}) {
   const sorts = sortOptions && sortOptions.length ? sortOptions : DEFAULT_SORT_OPTIONS;
 
   if (coverAspect === "square") {
@@ -470,7 +479,7 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
   const state = {
     items: [],
     query: "",
-    view: validViews.includes(storedView) ? storedView : "grid",
+    view: forceView || (validViews.includes(storedView) ? storedView : "grid"),
     sort: localStorage.getItem(`sort:${storageKey}`) || sorts[0].value,
     page: 0,
     tagFilters: [], // empty = no filter; otherwise match ANY selected tag
@@ -492,10 +501,14 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
           </div>
           <div class="custom-select sort-select"></div>
         </div>
-        <div class="view-toggle">
-          <button type="button" data-view="grid">Grid</button>
-          <button type="button" data-view="list">List</button>
-        </div>
+        ${
+          forceView
+            ? ""
+            : `<div class="view-toggle">
+                <button type="button" data-view="grid">Grid</button>
+                <button type="button" data-view="list">List</button>
+              </div>`
+        }
       </div>
       <div class="collection"></div>
       <div class="pagination"></div>
@@ -640,6 +653,13 @@ function createCollectionView({ container, storageKey, onSelect, sortOptions, co
     const pageItems = pageSize ? filtered.slice(state.page * pageSize, (state.page + 1) * pageSize) : filtered;
 
     for (const item of pageItems) {
+      if (renderItem) {
+        // Custom rows are fully self-contained — they wire their own click
+        // behavior (e.g. a native <details> expand plus separate star/link
+        // sub-clicks), rather than the whole-row-click-to-onSelect below.
+        itemsEl.appendChild(renderItem(item, onSelect));
+        continue;
+      }
       const el = document.createElement("div");
       el.className = "item";
       el.dataset.id = item.id;
