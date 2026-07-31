@@ -131,6 +131,7 @@ function createCollectionView({
   pageSize,
   renderItem,
   forceView,
+  hideViewToggle,
 }) {
   const sorts = sortOptions && sortOptions.length ? sortOptions : DEFAULT_SORT_OPTIONS;
 
@@ -162,7 +163,7 @@ function createCollectionView({
           <div class="custom-select sort-select"></div>
         </div>
         ${
-          forceView
+          forceView || hideViewToggle
             ? ""
             : `<div class="view-toggle">
                 <button type="button" data-view="grid">Grid</button>
@@ -309,6 +310,14 @@ function createCollectionView({
       state.items = items;
       state.page = 0;
       updateTagFilterOptions();
+      renderItems();
+    },
+    /** Lets a caller drive grid/list from outside — for a page whose own
+     * combined toggle replaces this view's built-in one (`hideViewToggle`). */
+    setView(view) {
+      if (!validViews.includes(view)) return;
+      state.view = view;
+      localStorage.setItem(`view:${storageKey}`, state.view);
       renderItems();
     },
   };

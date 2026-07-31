@@ -219,22 +219,6 @@ main {
   border-color: var(--sup-ink);
 }
 
-.mode-toggle-btn {
-  font-size: 0.68rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  border: 1px solid var(--sup-border);
-  border-radius: 9999px;
-  color: var(--sup-muted);
-  background: var(--sup-white);
-}
-
-.mode-toggle-btn.active {
-  background: var(--sup-ink);
-  color: var(--sup-white);
-  border-color: var(--sup-ink);
-}
-
 .pagination-prev,
 .pagination-next {
   font-size: 0.68rem;

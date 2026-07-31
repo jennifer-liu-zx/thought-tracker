@@ -490,30 +490,6 @@
 }
 
 /* ---- Song rows (Music > Albums tab, Song view mode) ---- */
-.mode-toggle {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.25rem;
-}
-
-.mode-toggle-btn {
-  font-family: inherit;
-  font-size: 0.75rem;
-  letter-spacing: var(--letter-spacing-wide);
-  text-transform: uppercase;
-  background: none;
-  border: 1px solid var(--color-border-input);
-  padding: 0.4rem 0.75rem;
-  cursor: pointer;
-  color: var(--color-text-muted);
-  border-radius: var(--radius);
-}
-
-.mode-toggle-btn.active {
-  background: var(--color-accent);
-  color: var(--color-accent-text);
-  border-color: var(--color-accent);
-}
 
 .song-item {
   border-bottom: 1px solid var(--color-border);

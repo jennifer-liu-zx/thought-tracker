@@ -148,5 +148,11 @@ function createSongMode({ collectionEl, addBtn, addPanel, addSearchInput, addRes
     }
   });
 
-  return { load };
+  // Exposed so music.js can insert its combined Grid/List/Song toggle here
+  // too — this collection's own toolbar has no Grid/List of its own
+  // (forceView: "list"), so without this, switching to Song mode would
+  // leave no toggle visible to switch back with.
+  const toolbarEl = collectionEl.querySelector(".collection-toolbar");
+
+  return { load, toolbarEl };
 }

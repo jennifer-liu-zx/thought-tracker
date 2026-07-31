@@ -5,7 +5,6 @@
   const backBtn = document.getElementById("music-back-btn");
   const collectionEl = document.getElementById("music-collection");
 
-  const modeToggleBtns = document.querySelectorAll("#music-browse .mode-toggle-btn");
   const albumModeEl = document.getElementById("music-album-mode");
   const songModeEl = document.getElementById("music-song-mode");
   const songsCollectionEl = document.getElementById("music-songs-collection");
@@ -66,19 +65,49 @@
   let currentTracks = [];
   let draggingTrackId = null;
   let searchDebounce = null;
-  let mode = localStorage.getItem("music-mode") === "song" ? "song" : "album";
+
+  // "grid"/"list" are two layouts of the album collection; "song" swaps to
+  // an entirely different collection (starred tracks across every album —
+  // see music-song-mode.js). All three read as one toggle, so grid/list's
+  // value is derived from the album collectionView's own persisted
+  // preference rather than a separate storage key.
+  function lastAlbumView() {
+    return localStorage.getItem("view:music") === "list" ? "list" : "grid";
+  }
+  let browseMode = localStorage.getItem("music-mode") === "song" ? "song" : lastAlbumView();
+
+  // Builds one Grid/List/Song button group, reusing .view-toggle's own
+  // styling wholesale so it's indistinguishable from a plain Grid/List
+  // toggle. Two independent copies get inserted — one into each of
+  // Album/Song mode's own toolbar — since only one toolbar is ever visible
+  // at a time, but each needs its own copy to switch away from itself.
+  function buildModeToggle() {
+    const wrap = document.createElement("div");
+    wrap.className = "view-toggle";
+    wrap.innerHTML = `
+      <button type="button" data-mode="song">Song</button>
+      <button type="button" data-mode="grid">Grid</button>
+      <button type="button" data-mode="list">List</button>
+    `;
+    wrap.querySelectorAll("button").forEach((btn) => {
+      btn.addEventListener("click", () => setBrowseMode(btn.dataset.mode));
+    });
+    return wrap;
+  }
 
   const collectionView = createCollectionView({
     container: collectionEl,
     storageKey: "music",
     onSelect: selectAlbum,
     coverAspect: "square",
+    hideViewToggle: true,
     sortOptions: [
       { value: "title-asc", label: "Title (A–Z)", cmp: (a, b) => a.title.localeCompare(b.title) },
       { value: "title-desc", label: "Title (Z–A)", cmp: (a, b) => b.title.localeCompare(a.title) },
       { value: "artist-asc", label: "Artist (A–Z)", cmp: (a, b) => (a.artist || "").localeCompare(b.artist || "") },
     ],
   });
+  collectionEl.querySelector(".collection-toolbar").appendChild(buildModeToggle());
 
   // Song View mode's own rendering/data/add-song-search logic lives in
   // music-song-mode.js — this file only owns switching to/from it.
@@ -89,25 +118,29 @@
     addSearchInput: songAddSearchInput,
     addResultsEl: songAddResultsEl,
     onOpenTrack: (albumId, trackId) => {
-      setMode("album");
+      setBrowseMode(lastAlbumView());
       openFavoriteTrack(packTrackId(albumId, trackId));
     },
     onStarChanged: () => favoritesPanel.refresh(),
   });
+  songMode.toolbarEl.appendChild(buildModeToggle());
 
-  function setMode(next) {
-    mode = next;
-    localStorage.setItem("music-mode", mode);
-    albumModeEl.hidden = mode !== "album";
-    songModeEl.hidden = mode !== "song";
-    modeToggleBtns.forEach((btn) => btn.classList.toggle("active", btn.dataset.mode === mode));
-    if (mode === "album") loadAlbums();
-    else songMode.load();
+  function setBrowseMode(next) {
+    browseMode = next;
+    const isSong = browseMode === "song";
+    localStorage.setItem("music-mode", isSong ? "song" : "album");
+    albumModeEl.hidden = isSong;
+    songModeEl.hidden = !isSong;
+    document
+      .querySelectorAll("#music-browse [data-mode]")
+      .forEach((btn) => btn.classList.toggle("active", btn.dataset.mode === browseMode));
+    if (isSong) {
+      songMode.load();
+    } else {
+      collectionView.setView(browseMode);
+      loadAlbums();
+    }
   }
-
-  modeToggleBtns.forEach((btn) => {
-    btn.addEventListener("click", () => setMode(btn.dataset.mode));
-  });
 
   const RELEASE_TYPE_LABELS = { ep: "EP", single: "Single", live: "Live" };
 
@@ -558,8 +591,8 @@
   window.Diary.music = {
     showBrowse: () => {
       showBrowse();
-      if (mode === "album") loadAlbums();
-      else songMode.load();
+      if (browseMode === "song") songMode.load();
+      else loadAlbums();
       favoritesPanel.refresh();
     },
     openItem: (id) => selectAlbum(id),
@@ -568,13 +601,19 @@
   };
 
   // Reflect whatever mode was persisted from a previous visit before the
-  // initial load — setMode() itself would also flip modeToggleBtns'
-  // active class and re-fetch, which is redundant with the loadAlbums()
-  // call below on a fresh page load, so just sync the hidden/active state here.
-  albumModeEl.hidden = mode !== "album";
-  songModeEl.hidden = mode !== "song";
-  modeToggleBtns.forEach((btn) => btn.classList.toggle("active", btn.dataset.mode === mode));
+  // initial load — setBrowseMode() itself would also re-fetch, which is
+  // redundant with the loadAlbums()/songMode.load() call below on a fresh
+  // page load, so just sync the hidden/active state here. The album
+  // collectionView's own initial `state.view` already matches lastAlbumView()
+  // (both read the same `view:music` localStorage key), so it doesn't need
+  // an explicit setView() call on this first render.
+  const isSongInitially = browseMode === "song";
+  albumModeEl.hidden = isSongInitially;
+  songModeEl.hidden = !isSongInitially;
+  document
+    .querySelectorAll("#music-browse [data-mode]")
+    .forEach((btn) => btn.classList.toggle("active", btn.dataset.mode === browseMode));
 
-  if (mode === "album") loadAlbums();
-  else songMode.load();
+  if (isSongInitially) songMode.load();
+  else loadAlbums();
 })();
