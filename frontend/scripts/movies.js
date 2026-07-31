@@ -114,12 +114,6 @@
     );
   }
 
-  function updateCoverPreview() {
-    coverPreviewEl.innerHTML = coverEl.value
-      ? `<img src="${coverEl.value}" alt="" />`
-      : "no poster";
-  }
-
   function renderWatchDates() {
     watchDatesEl.innerHTML = "";
     watchDates.forEach((wd, i) => {
@@ -195,34 +189,15 @@
     addBtn: addCrewBtn,
   });
 
-  coverEl.addEventListener("input", updateCoverPreview);
-
-  coverRemoveBtn.addEventListener("click", () => {
-    coverEl.value = "";
-    coverUploadEl.value = "";
-    updateCoverPreview();
+  const coverUpload = createCoverUpload({
+    coverInput: coverEl,
+    uploadInput: coverUploadEl,
+    removeBtn: coverRemoveBtn,
+    previewEl: coverPreviewEl,
+    emptyText: "no poster",
   });
 
-  coverUploadEl.addEventListener("change", () => {
-    const file = coverUploadEl.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      coverEl.value = reader.result;
-      updateCoverPreview();
-    };
-    reader.readAsDataURL(file);
-  });
-
-  function showBrowse() {
-    detailEl.hidden = true;
-    browseEl.hidden = false;
-  }
-
-  function showDetail() {
-    browseEl.hidden = true;
-    detailEl.hidden = false;
-  }
+  const { showBrowse, showDetail } = createBrowseDetailToggle({ browseEl, detailEl });
 
   function resetForm() {
     idEl.value = "";
@@ -247,7 +222,7 @@
     renderTags();
     castEditor.render();
     crewEditor.render();
-    updateCoverPreview();
+    coverUpload.updatePreview();
     deleteBtn.hidden = true;
     searchPanel.hidden = false;
     searchInput.value = "";
@@ -278,7 +253,7 @@
     renderTags();
     castEditor.render();
     crewEditor.render();
-    updateCoverPreview();
+    coverUpload.updatePreview();
     markClean();
   }
 
@@ -328,7 +303,7 @@
           titleEl.value = r.title || "";
           yearEl.value = r.year || "";
           coverEl.value = r.poster || "";
-          updateCoverPreview();
+          coverUpload.updatePreview();
           searchResultsEl.innerHTML = "";
           searchInput.value = r.title;
         });

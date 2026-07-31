@@ -165,12 +165,6 @@
     );
   }
 
-  function updateCoverPreview() {
-    coverPreviewEl.innerHTML = coverEl.value
-      ? `<img src="${coverEl.value}" alt="" />`
-      : "no cover";
-  }
-
   const thoughtsEditor = createThoughtsEditor({
     container: thoughtsEl,
     getThoughts: () => thoughts,
@@ -207,34 +201,15 @@
     renderTags();
   });
 
-  coverEl.addEventListener("input", updateCoverPreview);
-
-  coverRemoveBtn.addEventListener("click", () => {
-    coverEl.value = "";
-    coverUploadEl.value = "";
-    updateCoverPreview();
+  const coverUpload = createCoverUpload({
+    coverInput: coverEl,
+    uploadInput: coverUploadEl,
+    removeBtn: coverRemoveBtn,
+    previewEl: coverPreviewEl,
+    emptyText: "no cover",
   });
 
-  coverUploadEl.addEventListener("change", () => {
-    const file = coverUploadEl.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      coverEl.value = reader.result;
-      updateCoverPreview();
-    };
-    reader.readAsDataURL(file);
-  });
-
-  function showBrowse() {
-    detailEl.hidden = true;
-    browseEl.hidden = false;
-  }
-
-  function showDetail() {
-    browseEl.hidden = true;
-    detailEl.hidden = false;
-  }
+  const { showBrowse, showDetail } = createBrowseDetailToggle({ browseEl, detailEl });
 
   function resetForm() {
     idEl.value = "";
@@ -256,7 +231,7 @@
     favoriteOrder = null;
     thoughtsEditor.render();
     renderTags();
-    updateCoverPreview();
+    coverUpload.updatePreview();
     deleteBtn.hidden = true;
     tracksPanel.hidden = true;
     newTrackTitle.value = "";
@@ -409,7 +384,7 @@
     favoriteOrder = album.favorite_order ?? null;
     thoughtsEditor.render();
     renderTags();
-    updateCoverPreview();
+    coverUpload.updatePreview();
     importTracksBtn.hidden = !(album.mbid || album.discogs_id);
     markClean();
   }
@@ -511,7 +486,7 @@
             if (!tags.includes(tag)) tags.push(tag);
           }
           renderTags();
-          updateCoverPreview();
+          coverUpload.updatePreview();
           // Stays hidden until the album is actually saved — importing
           // needs a real album id to write track files into.
           searchResultsEl.innerHTML = "";

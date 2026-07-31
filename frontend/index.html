@@ -711,13 +711,7 @@
               <input type="date" id="journal-filter-date-from" title="From date" />
               <input type="date" id="journal-filter-date-to" title="To date" />
             </div>
-            <div class="tag-filter-wrap">
-              <button type="button" class="tag-filter-btn" id="journal-tag-filter-btn">All tags</button>
-              <div class="tag-filter-panel" id="journal-tag-filter-panel" hidden>
-                <input type="text" class="tag-filter-search" id="journal-tag-filter-search" placeholder="Search tags..." />
-                <div class="tag-filter-options" id="journal-tag-filter-options"></div>
-              </div>
-            </div>
+            <div class="tag-filter-mount" id="journal-tag-filter-mount"></div>
           </div>
           <ul id="journal-list" class="journal-list"></ul>
         </aside>
@@ -756,7 +750,11 @@
   </main>
 
   <script src="/scripts/app.js"></script>
-  <script src="/scripts/shelf.js"></script>
+  <script src="/scripts/tag-filter.js"></script>
+  <script src="/scripts/dom-utils.js"></script>
+  <script src="/scripts/collection-browser.js"></script>
+  <script src="/scripts/editors.js"></script>
+  <script src="/scripts/misc-widgets.js"></script>
   <script src="/scripts/track-editor.js"></script>
   <script src="/scripts/journal.js"></script>
   <script src="/scripts/books.js"></script>

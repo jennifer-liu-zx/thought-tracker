@@ -14,17 +14,14 @@ const addTagBtn = document.getElementById("add-entry-tag-btn");
 const searchInput = document.getElementById("journal-search-input");
 const dateFromEl = document.getElementById("journal-filter-date-from");
 const dateToEl = document.getElementById("journal-filter-date-to");
-const tagFilterBtn = document.getElementById("journal-tag-filter-btn");
-const tagFilterPanel = document.getElementById("journal-tag-filter-panel");
-const tagFilterSearchEl = document.getElementById("journal-tag-filter-search");
-const tagFilterOptionsEl = document.getElementById("journal-tag-filter-options");
+const tagFilterMount = document.getElementById("journal-tag-filter-mount");
 
 const titleAutoGrow = enableAutoGrowTextarea(titleEl);
 
 let tags = [];
 let allEntries = [];
-let allTags = [];
-const filterState = { query: "", dateFrom: "", dateTo: "", tagFilters: [], tagFilterQuery: "" };
+const filterState = { query: "", dateFrom: "", dateTo: "" };
+const tagFilterWidget = createTagFilterWidget({ mount: tagFilterMount, onChange: renderList });
 
 function buildPayload() {
   return { title: titleEl.value, date: dateEl.value, body: bodyEl.value, tags };
@@ -54,55 +51,6 @@ const tagsEditor = createChipListEditor({
   onChange: autoSaveTags,
 });
 
-function updateTagFilterButtonLabel() {
-  if (filterState.tagFilters.length === 0) tagFilterBtn.textContent = "All tags";
-  else if (filterState.tagFilters.length === 1) tagFilterBtn.textContent = filterState.tagFilters[0];
-  else tagFilterBtn.textContent = `${filterState.tagFilters.length} tags`;
-}
-
-function renderTagFilterOptions() {
-  const q = filterState.tagFilterQuery.trim().toLowerCase();
-  const visibleTags = q ? allTags.filter((t) => t.toLowerCase().includes(q)) : allTags;
-
-  tagFilterOptionsEl.innerHTML = visibleTags.length
-    ? visibleTags
-        .map(
-          (t) => `
-            <label class="tag-filter-option">
-              <input type="checkbox" value="${escapeHtml(t)}" ${filterState.tagFilters.includes(t) ? "checked" : ""} />
-              ${escapeHtml(t)}
-            </label>
-          `
-        )
-        .join("")
-    : `<p class="tag-filter-empty">No matching tags.</p>`;
-
-  tagFilterOptionsEl.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
-    cb.addEventListener("change", () => {
-      const checkedHere = [...tagFilterOptionsEl.querySelectorAll('input[type="checkbox"]:checked')].map(
-        (c) => c.value
-      );
-      const keptHidden = filterState.tagFilters.filter((t) => !visibleTags.includes(t));
-      filterState.tagFilters = [...keptHidden, ...checkedHere];
-      updateTagFilterButtonLabel();
-      renderList();
-    });
-  });
-
-  updateTagFilterButtonLabel();
-}
-
-tagFilterBtn.addEventListener("click", () => {
-  tagFilterPanel.hidden = !tagFilterPanel.hidden;
-  if (!tagFilterPanel.hidden) tagFilterSearchEl.focus();
-});
-
-tagFilterSearchEl.addEventListener("input", (e) => {
-  filterState.tagFilterQuery = e.target.value;
-  renderTagFilterOptions();
-});
-tagFilterSearchEl.addEventListener("click", (e) => e.stopPropagation());
-
 searchInput.addEventListener("input", (e) => {
   filterState.query = e.target.value;
   renderList();
@@ -121,9 +69,8 @@ dateToEl.addEventListener("change", (e) => {
 async function loadEntries() {
   const res = await fetch("/api/journal");
   allEntries = await res.json();
-  allTags = [...new Set(allEntries.flatMap((e) => e.tags || []))].sort();
-  filterState.tagFilters = filterState.tagFilters.filter((t) => allTags.includes(t));
-  renderTagFilterOptions();
+  const allTags = [...new Set(allEntries.flatMap((e) => e.tags || []))].sort();
+  tagFilterWidget.setAllTags(allTags);
   renderList();
 }
 
@@ -133,8 +80,9 @@ function renderList() {
   if (q) filtered = filtered.filter((e) => e.title.toLowerCase().includes(q));
   if (filterState.dateFrom) filtered = filtered.filter((e) => e.date >= filterState.dateFrom);
   if (filterState.dateTo) filtered = filtered.filter((e) => e.date <= filterState.dateTo);
-  if (filterState.tagFilters.length > 0) {
-    filtered = filtered.filter((e) => (e.tags || []).some((t) => filterState.tagFilters.includes(t)));
+  const tagFilters = tagFilterWidget.getSelected();
+  if (tagFilters.length > 0) {
+    filtered = filtered.filter((e) => (e.tags || []).some((t) => tagFilters.includes(t)));
   }
 
   listEl.innerHTML = "";

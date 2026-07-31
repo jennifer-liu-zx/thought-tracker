@@ -31,26 +31,7 @@
     const track = album.tracks.find((t) => t.id === item.trackId);
     if (!track) return;
     track.favorite_order = index;
-    await fetch(`/api/music/${item.albumId}/tracks/${item.trackId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        track_number: track.track_number,
-        title: track.title,
-        english_title: track.english_title || "",
-        show_english_title: !!track.show_english_title,
-        link: track.link || "",
-        duration: track.duration || "",
-        writers: track.writers || "",
-        composers: track.composers || "",
-        producers: track.producers || "",
-        featuring: track.featuring || "",
-        label: track.label || "",
-        favorite: track.favorite,
-        favorite_order: track.favorite_order,
-        thoughts: track.thoughts,
-      }),
-    });
+    await putTrack(item.albumId, track);
   }
 
   async function persistOrder(orderedItems) {
