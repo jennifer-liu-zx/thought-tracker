@@ -21,6 +21,6 @@ media/*
 .claude/skills/
 skills-lock.json
 
-# Personal reference material (UI screenshots/recordings, the original
-# project brief) — not app code, kept local-only.
-notes/reference/
+# Personal working notes (planning, research, reference material) — not
+# app code, kept local-only.
+notes/
