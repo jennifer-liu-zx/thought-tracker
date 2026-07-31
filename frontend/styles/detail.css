@@ -444,6 +444,10 @@
   border-radius: var(--radius);
   cursor: pointer;
   margin-top: 0.4rem;
+  /* .thoughts-list's flex `gap` (0.6rem) already adds to this margin-top,
+     giving 1rem of space above the button; matching that below means adding
+     0.5rem here on top of .thoughts-list's own 0.5rem margin-bottom. */
+  margin-bottom: 0.5rem;
 }
 
 /* ---- Episodes accordion (TV shows) / Tracks accordion (Music) ---- */

@@ -329,7 +329,7 @@
 
 .view-toggle {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.5rem;
 }
 
 .view-toggle button {
@@ -492,7 +492,7 @@
 /* ---- Song rows (Music > Albums tab, Song view mode) ---- */
 .mode-toggle {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.5rem;
   margin-bottom: 1.25rem;
 }
 
